@@ -1,11 +1,15 @@
 name: Build
 
-on: [push, pull_request_target]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
 
 jobs:
   buildWindows:
     name: Build for ${{ matrix.targetPlatform }}
-    runs-on: windows-2022
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -14,7 +18,6 @@ jobs:
         unityVersion:
           - 2022.3.8f1
         targetPlatform:
-          - StandaloneWindows # Build a Windows 32-bit standalone.
           - StandaloneWindows64 # Build a Windows 64-bit standalone.
 
     steps:
@@ -22,7 +25,7 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ${{ matrix.projectPath }}/Library
           key:
@@ -41,8 +44,7 @@ jobs:
           projectPath: ${{ matrix.projectPath }}
           unityVersion: ${{ matrix.unityVersion }}
           targetPlatform: ${{ matrix.targetPlatform }}
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          name: Build
+          name: Build-${{ matrix.targetPlatform }}
           path: build
-

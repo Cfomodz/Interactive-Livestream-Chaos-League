@@ -198,7 +198,7 @@ public class SpotifyDJ : MonoBehaviour
         AccessTokenExpiresIn = tokenResponse.expires_in - 120; //Do 60 seconds early as cushion for 
         _expirationTime = DateTime.Now.AddSeconds(tokenResponse.expires_in - 120); 
 
-        Debug.Log($"Spotify Access Token: {AccessToken}\nRefresh Token: {RefreshToken} \nExpires In: {AccessTokenExpiresIn}");
+        Debug.Log($"Spotify tokens received. Expires In: {AccessTokenExpiresIn}");
         await InitSpotifyClient();
     }
 
