@@ -1,7 +1,9 @@
-﻿// If type or namespace TwitchLib could not be found. Make sure you add the latest TwitchLib.Unity.dll to your project folder
+// If type or namespace TwitchLib could not be found. Make sure you add the latest TwitchLib.Unity.dll to your project folder
 // Download it here: https://github.com/TwitchLib/TwitchLib.Unity/releases
 // Or download the repository at https://github.com/TwitchLib/TwitchLib.Unity, build it, and copy the TwitchLib.Unity.dll from the output directory
 using Amazon.Runtime.Internal.Endpoints.StandardLibrary;
+using LiveChat;
+using LiveChat.Twitch;
 using Newtonsoft.Json;
 using System;
 using System.Collections;
@@ -9,10 +11,6 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using TwitchLib.Client.Events;
-using TwitchLib.Client.Models;
-using TwitchLib.Communication.Events;
-using TwitchLib.Unity;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -29,82 +27,81 @@ public class TwitchClient : MonoBehaviour
     [SerializeField] private DefaultDefenseV2 _defaultDefenseV2;
     [SerializeField] private SpotifyDJ _spotifyDJ;
 
-    private Client _client;
+    private TwitchLiveChatClient _client;
 
     public void Init(string channelName, string botAccessToken)
     {
-        if (_client != null)
-            _client.Disconnect();
+        if (_client == null)
+            _client = GetComponent<TwitchLiveChatClient>();
 
-        ConnectionCredentials credentials = new ConnectionCredentials(channelName, botAccessToken);
+        if (_client == null)
+            _client = gameObject.AddComponent<TwitchLiveChatClient>();
 
-        // Create new instance of Chat Client
-        _client = new Client();
+        _client.Connected -= OnConnected;
+        _client.JoinedChannel -= OnJoinedChannel;
+        _client.MessageReceived -= OnMessageReceived;
+        _client.Error -= OnError;
 
-        // Initialize the client with the credentials instance, and setting a default channel to connect to.
-        _client.Initialize(credentials, channelName);
+        _client.Connected += OnConnected;
+        _client.JoinedChannel += OnJoinedChannel;
+        _client.MessageReceived += OnMessageReceived;
+        _client.Error += OnError;
 
-        // Bind callbacks to events
-        _client.OnConnected += OnConnected;
-        _client.OnJoinedChannel += OnJoinedChannel;
-        _client.OnMessageReceived += OnMessageReceived;
-        _client.OnError += OnError;
-
-        // Connect
-        _client.Connect();
+        _client.Connect(new LiveChatConnectConfig
+        {
+            ChannelName = channelName,
+            BotAccessToken = botAccessToken
+        });
 
         Debug.Log("Done Initializing Twitch Client");
     }
 
-    private void OnConnected(object sender, OnConnectedArgs e)
+    private void OnConnected()
     {
         Debug.Log("Connected twitch client");
     }
 
-    private void OnJoinedChannel(object sender, OnJoinedChannelArgs e)
+    private void OnJoinedChannel(string channel)
     {
-        Debug.Log($"The bot {e.BotUsername} just joined the channel: {e.Channel}");
-        _client.SendMessage(e.Channel, "[BOT] Chaos League bot connected to the channel! PogChamp");
+        Debug.Log($"Joined channel: {channel}");
+        _client.SendMessage(channel, "[BOT] Chaos League bot connected to the channel! PogChamp");
     }
 
 
-    public void OnError(object sender, OnErrorEventArgs e)
+    public void OnError(Exception exception)
     {
-        Debug.LogError("On Twitch Client Error: " + e.Exception.ToString());
+        Debug.LogError("On Twitch Client Error: " + exception);
     }
 
-    public void OnMessageReceived(object sender, OnMessageReceivedArgs e)
+    public void OnMessageReceived(LiveChatMessage message)
     {
-        string messageId = e.ChatMessage.Id; 
-        string twitchId = e.ChatMessage.UserId;
-        string twitchUsername = e.ChatMessage.Username;
-        Color usernameColor = Color.white;
+        string messageId = message.MessageId;
+        string twitchId = message.UserId;
+        string twitchUsername = message.Username;
+        Color usernameColor = message.UsernameColor;
 
-        ColorUtility.TryParseHtmlString(e.ChatMessage.ColorHex, out usernameColor);
-
-        Debug.Log($"Found name color in message: {MyUtil.ColorToHexString(usernameColor)} {e.ChatMessage.ColorHex}"); 
-        string rawIrcMsg = e.ChatMessage.RawIrcMessage;
-        string rawMsg = e.ChatMessage.Message;
-        bool isSubscriber = e.ChatMessage.IsSubscriber;
-        bool isFirstMessage = e.ChatMessage.IsFirstMessage;
-        int bits = e.ChatMessage.Bits;
+        Debug.Log($"Found name color in message: {MyUtil.ColorToHexString(usernameColor)}");
+        string rawMsg = message.RawMessage;
+        bool isSubscriber = message.IsSubscriber;
+        bool isFirstMessage = message.IsFirstMessage;
+        int bits = message.Bits;
         bool isAdmin = (twitchId == Secrets.CHANNEL_ID); //e.chatmessage.isMe doesn't work for some reason
 
-        //Debug.Log($"Total emotes: {e.ChatMessage.EmoteSet.Emotes.Count} emote replaced message: {e.ChatMessage.EmoteReplacedMessage} rawIrcMsg: {rawIrcMsg}");
-        List<Emote> emotes = e.ChatMessage.EmoteSet.Emotes;
+        //Debug.Log($"Total emotes: {message.Emotes?.Count ?? 0} rawIrcMsg: {message.RawIrcMessage}");
+        List<LiveChatEmote> emotes = message.Emotes ?? new List<LiveChatEmote>();
         emotes.Sort((emote1, emote2) => emote1.StartIndex.CompareTo(emote2.StartIndex));
 
         StartCoroutine(HandleMessage(messageId, twitchId, twitchUsername, usernameColor, rawMsg, emotes, isSubscriber, isFirstMessage, bits, isAdmin));
 
-        Debug.Log(JsonConvert.SerializeObject(e, formatting:Formatting.Indented).ToString());
+        Debug.Log(JsonConvert.SerializeObject(message, Formatting.Indented));
 
         //If the message is a hype chat, give them the multiplier zone
         //e.ChatMessage.user
-        Debug.Log($"Message received from {e.ChatMessage.Username}: {e.ChatMessage.Message}   id: {e.ChatMessage.Id} total bits: {e.ChatMessage.Bits} {e.ChatMessage.BitsInDollars} {e.ChatMessage.CheerBadge} isAdmin: {isAdmin}");
+        Debug.Log($"Message received from {message.Username}: {message.RawMessage}   id: {message.MessageId} total bits: {message.Bits} isAdmin: {isAdmin}");
 
     }
 
-    public IEnumerator HandleMessage(string messageId, string twitchId, string twitchUsername, Color usernameColor, string rawMsg, List<Emote> emotes, bool isSubscriber, bool isFirstMessage, int bits, bool isAdmin)
+    public IEnumerator HandleMessage(string messageId, string twitchId, string twitchUsername, Color usernameColor, string rawMsg, List<LiveChatEmote> emotes, bool isSubscriber, bool isFirstMessage, int bits, bool isAdmin)
     {
 
         //Debug.LogError($"Handling message from: API_MODE: {AppConfig.inst.GetS("API_MODE")} ClientID: {AppConfig.GetClientID()} ClientSecret: {AppConfig.GetClientSecret()}");
@@ -648,7 +645,7 @@ public class TwitchClient : MonoBehaviour
         }
     }
 
-    private string RemoveTwitchEmotes(string rawMsg, List<Emote> emotes)
+    private string RemoveTwitchEmotes(string rawMsg, List<LiveChatEmote> emotes)
     {
         if(emotes == null || emotes.Count <= 0)
             return rawMsg;

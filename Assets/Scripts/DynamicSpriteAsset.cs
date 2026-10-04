@@ -5,8 +5,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using LiveChat;
 using TMPro;
-using TwitchLib.Api.Helix.Models.Chat.Emotes;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -171,7 +171,7 @@ public class DynamicSpriteAsset : MonoBehaviour
 
     }
 
-    public IEnumerator GetSpriteInfusedMsg(CoroutineResult<string> coRes, string rawMsg, List<TwitchLib.Client.Models.Emote> emotes, bool isMe = false)
+    public IEnumerator GetSpriteInfusedMsg(CoroutineResult<string> coRes, string rawMsg, List<LiveChatEmote> emotes, bool isMe = false)
     {
         _spriteInfusedMsg.Clear();
 

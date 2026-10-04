@@ -17,6 +17,15 @@ The project is split up into 3 folders:
 - `Packages` containing the `manifest.json` and `packages-lock.json` files.
 - `ProjectSettings` containing configuration (JSON) files and asset files.
 
+## LiveChat Module
+
+Generic live chat integration lives under `Assets/Scripts/LiveChat`. It exposes
+platform-neutral message/event models and Twitch implementations:
+
+- `LiveChat.Twitch.TwitchLiveChatClient` for chat messages
+- `LiveChat.Twitch.TwitchPubSubClient` for bits, redemptions, and subs
+- `LiveChat.YouTube.YouTubeLiveChatClient` is a stub you can wire to YouTube Data API
+
 ## Contribute
 
 Please read the CONTRIBUTING.md file (TODO) for how you can contribute to this project and what is important.

@@ -1,4 +1,5 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
+using LiveChat;
 using Newtonsoft.Json;
 using System;
 using System.Collections;
@@ -7,8 +8,6 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
 using TMPro;
-using TwitchLib.Api.Helix;
-using TwitchLib.Client.Events;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -38,7 +37,7 @@ public class UnitTesting : MonoBehaviour
     [SerializeField] private string SubGiftRecipientId;
     [SerializeField] private string SubGiftRecipientUsername;
     [SerializeField] private int MultiMonthDuration = 1;
-    [SerializeField] private TwitchLib.PubSub.Enums.SubscriptionPlan SubPlan;
+    [SerializeField] private LiveChatSubscriptionPlan SubPlan;
 
     [SerializeField] private PredictionObj testPredObj;
     [SerializeField] private bool testPrediction;

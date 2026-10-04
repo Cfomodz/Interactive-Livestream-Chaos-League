@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
-using TwitchLib.PubSub.Enums;
+using LiveChat;
 
 public class MyTTS : MonoBehaviour
 {
@@ -134,7 +134,7 @@ public class MyTTS : MonoBehaviour
         SpeechMaster(textToSpeak, VoiceId.Brian, AudioPitch.Reg, addToQ:true);
     }
 
-    public void AggregateSubGift(string gifterUsername, int multiMonthDuration, SubscriptionPlan tier)
+    public void AggregateSubGift(string gifterUsername, int multiMonthDuration, LiveChatSubscriptionPlan tier)
     {
         SubGifter sg;
         if(!_giftedSubs.TryGetValue(gifterUsername, out sg))
@@ -269,5 +269,5 @@ public struct SubGifter
     public string username;
     public int count;
     public int multimonthduration;
-    public SubscriptionPlan tier; 
+    public LiveChatSubscriptionPlan tier; 
 }
