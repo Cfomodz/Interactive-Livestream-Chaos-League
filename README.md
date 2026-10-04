@@ -17,33 +17,15 @@ The project is split up into 3 folders:
 - `Packages` containing the `manifest.json` and `packages-lock.json` files.
 - `ProjectSettings` containing configuration (JSON) files and asset files.
 
-## LiveChat Module
+## Live chat
 
-Generic live chat integration lives under `Assets/Scripts/LiveChat`. It exposes
-platform-neutral message/event models and Twitch implementations:
+Twitch chat, PubSub and the chat command router come from the
+[unity-livechat](https://github.com/Cfomodz/unity-livechat) package (`com.cfomodz.livechat`),
+installed through `Packages/manifest.json`. The package also ships the TwitchLib DLLs.
+See its README for the API and how to write chat commands.
 
-- `LiveChat.Twitch.TwitchLiveChatClient` for chat messages
-- `LiveChat.Twitch.TwitchPubSubClient` for bits, redemptions, and subs
-- `LiveChat.YouTube.YouTubeLiveChatClient` is a stub you can wire to YouTube Data API
-
-## Chat Command Foundation
-
-For building chat-driven game ideas, there is a command routing layer in
-`Assets/Scripts/LiveChat` under the `LiveChat.Commands` namespace:
-
-- `ChatCommandRouter` listens to `LiveChatClientBase` messages and dispatches commands
-- `ChatCommandHandler` is the base class for new commands
-- `ChatCommandHelp`, `ChatCommandPing`, and `ChatCommandEcho` are example handlers
-
-Quick setup:
-
-1. Add `TwitchLiveChatClient` (or another `LiveChatClientBase`) to a GameObject.
-2. Add `ChatCommandRouter` to the same object and set the command prefix (default `!`).
-3. Add one or more `ChatCommandHandler` components as children of the router.
-4. Create new commands by deriving from `ChatCommandHandler` and overriding
-   `Execute(ChatCommandContext context)`.
-
-The parser supports quoted arguments, for example: `!spawn "big boss" 3`.
+The chat-controlled mini-games that used to sit on branches here live in
+[chat-minigames](https://github.com/Cfomodz/chat-minigames).
 
 ## Contribute
 
