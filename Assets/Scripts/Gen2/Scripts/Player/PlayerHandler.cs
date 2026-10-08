@@ -163,7 +163,7 @@ public class PlayerHandler : MonoBehaviour, TravelingIndicatorIO, TI_Bid_IO
 
         TwitchUser user = t.Result;
 
-        if(user == null)
+        if(user == null || string.IsNullOrEmpty(user.ProfileImageUrl))
         {
             Debug.Log($"Failed to load ball Pfp for {pp.TwitchUsername}");
             PfpTexture = GetGameManager().DefaultPFP;

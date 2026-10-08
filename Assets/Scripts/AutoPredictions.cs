@@ -69,13 +69,7 @@ public class AutoPredictions : MonoBehaviour
             if (_kingWordFlag)
                 break;
         }
-        string winningOutcomeId;
-        if (_kingWordFlag)
-            winningOutcomeId = _runningPrediction.Outcomes[0].Id;
-        else
-            winningOutcomeId = _runningPrediction.Outcomes[1].Id;
-
-        FinishPrediction(winningOutcomeId);
+        FinishPrediction(firstOutcomeWins: _kingWordFlag);
         yield return null;
     }
 
@@ -89,13 +83,7 @@ public class AutoPredictions : MonoBehaviour
             if (_rebellionFlag)
                 break;
         }
-        string winningOutcomeId;
-        if (_rebellionFlag)
-            winningOutcomeId = _runningPrediction.Outcomes[0].Id;
-        else
-            winningOutcomeId = _runningPrediction.Outcomes[1].Id;
-        
-        FinishPrediction(winningOutcomeId); 
+        FinishPrediction(firstOutcomeWins: _rebellionFlag);
         yield return null; 
     }
     private IEnumerator RunLavaPrediction(PredictionObj predObj)
@@ -108,14 +96,7 @@ public class AutoPredictions : MonoBehaviour
             if (_lavaFlag)
                 break;
         }
-        string winningOutcomeId;
-        if (_lavaFlag)
-            winningOutcomeId = _runningPrediction.Outcomes[0].Id;
-        else
-            winningOutcomeId = _runningPrediction.Outcomes[1].Id;
-        
-
-        FinishPrediction(winningOutcomeId);
+        FinishPrediction(firstOutcomeWins: _lavaFlag);
         yield return null;
     }
     private IEnumerator RunWaterPrediction(PredictionObj predObj)
@@ -128,13 +109,7 @@ public class AutoPredictions : MonoBehaviour
             if (_waterFlag)
                 break;
         }
-        string winningOutcomeId;
-        if (_waterFlag)
-            winningOutcomeId = _runningPrediction.Outcomes[0].Id;
-        else
-            winningOutcomeId = _runningPrediction.Outcomes[1].Id;
-
-        FinishPrediction(winningOutcomeId);
+        FinishPrediction(firstOutcomeWins: _waterFlag);
         yield return null;
     }
 
@@ -148,14 +123,16 @@ public class AutoPredictions : MonoBehaviour
             if (_legendaryFlag)
                 break;
         }
-        string winningOutcomeId;
-        if (_legendaryFlag)
-            winningOutcomeId = _runningPrediction.Outcomes[0].Id;
-        else
-            winningOutcomeId = _runningPrediction.Outcomes[1].Id;
-
-        FinishPrediction(winningOutcomeId);
+        FinishPrediction(firstOutcomeWins: _legendaryFlag);
         yield return null;
+    }
+
+    /// <summary>Resolves the running prediction. Does nothing if none started (e.g. the channel can't run predictions, or debug chat).</summary>
+    private void FinishPrediction(bool firstOutcomeWins)
+    {
+        if (_runningPrediction == null || _runningPrediction.Outcomes.Count < 2)
+            return;
+        FinishPrediction(_runningPrediction.Outcomes[firstOutcomeWins ? 0 : 1].Id);
     }
 
     public void FinishPrediction(string winningOutcomeID)

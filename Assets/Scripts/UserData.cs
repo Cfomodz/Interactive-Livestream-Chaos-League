@@ -12,11 +12,23 @@ public static class UserData
     /// <summary>Used instead of the real folder when set, so tests don't touch your data.</summary>
     public static string FolderOverride { get; set; }
 
+    /// <summary>The value after a command-line flag such as -datadir, or null.</summary>
+    public static string CommandLineValue(string flag)
+    {
+        string[] args = System.Environment.GetCommandLineArgs();
+        for (int i = 0; i < args.Length - 1; i++)
+            if (string.Equals(args[i], flag, System.StringComparison.OrdinalIgnoreCase))
+                return args[i + 1];
+        return null;
+    }
+
+    /// <summary>The folder in use: a test override, then -datadir on the command line (e.g. a portable install), then the per-user folder.</summary>
     public static string Folder
     {
         get
         {
-            string folder = string.IsNullOrEmpty(FolderOverride) ? Application.persistentDataPath : FolderOverride;
+            string folder = !string.IsNullOrEmpty(FolderOverride) ? FolderOverride
+                : CommandLineValue("-datadir") ?? Application.persistentDataPath;
             Directory.CreateDirectory(folder);
             return folder;
         }

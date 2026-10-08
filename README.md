@@ -68,6 +68,28 @@ defaults in `Assets/StreamingAssets/config.sample.json`. The same folder holds t
 database, its backups, the emote cache and the Twitch logins. It's outside the repo and the build
 folder, so commits can't include it and rebuilds can't overwrite it.
 
+### Playing without Twitch (debug chat)
+
+Set `UseDebugChat` to `true` in your config, or start the game with `-debugchat`, to play without
+connecting to Twitch. A chat box appears in the bottom-left corner (`` ` `` shows or hides it): chat
+there as the streamer, or use test commands to be other viewers and fake stream events.
+`/help` lists them:
+
+- `/as alice !invitedby @bob`: chat as another viewer
+- `/bits alice 300 !lava`: cheer
+- `/redeem alice 100` (or `lava` / `water`): redeem channel points
+- `/sub`, `/gift`, `/giftbomb`, `/raid`, `/follow`
+
+Predictions and polls are skipped, and players get the default profile picture.
+
+For repeatable sessions, `-debugchatscript <file>` types a file's lines into the chat box, with
+`/wait <seconds>` pauses. Add `-datadir <empty folder>` so test players don't land in your real
+database. `Tools/debug-chat-smoke.txt` goes through most features:
+
+```
+ChaosLeague.exe -debugchat -datadir C:\Temp\chaos-test -debugchatscript Tools\debug-chat-smoke.txt
+```
+
 ### Text to speech
 
 Announcements and the king's chat are read aloud, fully offline. Run

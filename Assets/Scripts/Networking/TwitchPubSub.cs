@@ -17,9 +17,10 @@ public class TwitchPubSub : MonoBehaviour
     // Stream events (channel points, subs, gifts) from the live chat client. The name is from when these
     // came over Twitch PubSub, which Twitch shut down; they now arrive through EventSub. Bits arrive on
     // chat messages, and TwitchClient passes them to HandleOnBitsReceived.
-    private TwitchLiveChatClient _client;
+    private LiveChatClientBase _client;
 
-    public void Init(TwitchLiveChatClient client)
+    /// <param name="client">Twitch, or the debug chat box.</param>
+    public void Init(LiveChatClientBase client)
     {
         if (_client != null)
         {

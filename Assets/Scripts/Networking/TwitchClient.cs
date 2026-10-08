@@ -26,9 +26,10 @@ public class TwitchClient : MonoBehaviour
     [FormerlySerializedAs("_spotifyDJ")]
     [SerializeField] private MusicDJ _musicDJ;
 
-    private TwitchLiveChatClient _client;
+    private LiveChatClientBase _client;
 
-    public void Init(TwitchLiveChatClient client)
+    /// <param name="client">Twitch, or the debug chat box.</param>
+    public void Init(LiveChatClientBase client)
     {
         if (_client != null)
         {
@@ -64,6 +65,13 @@ public class TwitchClient : MonoBehaviour
 
     public void OnMessageReceived(LiveChatMessage message)
     {
+        //In debug chat, "/" lines are test commands (other viewers, subs, bits...), not chat
+        if (_client is LocalDebugLiveChatClient debugChat && message.RawMessage.StartsWith("/"))
+        {
+            DebugChatCommands.Run(debugChat, message.RawMessage);
+            return;
+        }
+
         string messageId = message.MessageId;
         string twitchId = message.UserId;
         string twitchUsername = message.Username;

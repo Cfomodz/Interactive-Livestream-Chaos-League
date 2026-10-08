@@ -18,6 +18,12 @@
       "UIDisplayText": "Twitch app Client ID (Public client)",
       "Personal": true
     },
+    "UseDebugChat": {
+      "Menu": 0,
+      "Value": false,
+      "UIDisplayText": "Debug chat: play without Twitch, using an on-screen chat box (or start the game with -debugchat)",
+      "Personal": true
+    },
     "HelpText": {
       "Menu": 0,
       "Value": "More info and a list of all commands are located below on my stream page panels.",

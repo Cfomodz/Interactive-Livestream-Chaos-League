@@ -1,0 +1,36 @@
+# A scripted debug chat session that touches most chat features. Run a build with:
+#   ChaosLeague.exe -debugchat -datadir <empty test folder> -debugchatscript <this file>
+# -datadir keeps the test players out of your real database. Lines starting with / are test
+# commands (see /help in debug chat); anything else is chat from you, the streamer.
+
+hello from the streamer
+/as alice hi everyone
+/as bob hello
+/wait 1
+
+# Invites: a claim, a second claim (refused), inviting yourself (refused), and the "@name" first message
+/as carol !invitedby @alice
+/as carol !invitedby @bob
+/as dave !invitedby @dave
+/as erin @alice
+/wait 1
+
+# Channel points, bits, subs and gifts
+/redeem alice 100
+/redeem bob lava
+/bits carol 300 rebellion time
+/bits dave 100 !water
+/sub erin 3
+/gift anon frank
+/giftbomb alice 3
+/wait 1
+
+# Info commands
+/as alice !stats
+/as bob !invite
+/as alice !playlist
+/as alice !song arcade
+/as alice !help
+/raid somechannel 25
+/follow gina
+/wait 20

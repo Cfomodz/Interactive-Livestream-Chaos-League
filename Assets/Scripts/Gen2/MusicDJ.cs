@@ -17,7 +17,7 @@ using UnityEngine.Serialization;
 public class MusicDJ : MonoBehaviour
 {
     private static readonly string[] SupportedExtensions = { ".mp3", ".ogg", ".wav" };
-    private const float DefaultVolume = 0.3f;
+    private const float DefaultVolume = 0.2f;
 
     [SerializeField] private TwitchClient _twitchClient;
     [FormerlySerializedAs("_spotifyConnectionStatus")]
