@@ -2,6 +2,7 @@ using LiveChat;
 using LiveChat.Twitch;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -37,9 +38,12 @@ public class TwitchApi : MonoBehaviour
 
     public static bool IsDebugChat => _chat is LocalDebugLiveChatClient;
 
+    private static string _setupProblem;
+
     /// <summary>One line describing the Twitch connection, for the settings overlay.</summary>
     public static string StatusText =>
-        _twitch != null ? _twitch.StatusText : IsDebugChat ? "Debug chat (not connected to Twitch)" : "Not connected";
+        IsDebugChat ? "Debug chat (not connected to Twitch)"
+        : _setupProblem ?? (_twitch != null ? _twitch.StatusText : "Not connected");
 
     public static string BidRewardTitle(int cost) => $"Bid {cost} Spawn Ticket{((cost == 1) ? "" : "s")}";
     public const string LavaRewardTitle = "Activate Lava on Throne Tile";
@@ -62,8 +66,6 @@ public class TwitchApi : MonoBehaviour
             _twitch = _twitchClient.gameObject.AddComponent<TwitchLiveChatClient>();
         _chat = _twitch;
 
-        _twitch.ClientId = AppConfig.inst.GetS("TwitchClientId");
-        _twitch.BotLogin = AppConfig.inst.GetS("TwitchBotLogin");
         _twitch.ChannelPoints = true;
         _twitch.Predictions = true;
         _twitch.Polls = true;
@@ -78,13 +80,53 @@ public class TwitchApi : MonoBehaviour
         _twitchClient.Init(_twitch);
         _twitchPubSub.Init(_twitch);
 
-        string channel = AppConfig.inst.GetS("TwitchChannel");
-        if (string.IsNullOrWhiteSpace(channel))
+        ConnectToTwitch();
+    }
+
+    /// <summary>
+    /// Connects with the channel, client ID and bot from your config (the settings menu's Networking
+    /// page, or config.json). If a login is waiting, opens Twitch's activation page for it again.
+    /// Wired to the settings menu's Connect button.
+    /// </summary>
+    public void ConnectToTwitch()
+    {
+        if (_twitch == null)
+            return;
+
+        if (_twitch.PendingAuthorization != null)
         {
-            Debug.LogError($"Set TwitchChannel (and TwitchClientId) in your config to connect to Twitch, or turn on UseDebugChat to play without it: {UserData.ConfigPath}");
+            OnAuthorizationRequired(_twitch.PendingAuthorization);
             return;
         }
+
+        string channel = AppConfig.inst.GetS("TwitchChannel").Trim();
+        string clientId = AppConfig.inst.GetS("TwitchClientId").Trim();
+        if (string.IsNullOrEmpty(channel) || string.IsNullOrEmpty(clientId))
+        {
+            _setupProblem = "Set TwitchChannel and TwitchClientId (settings, Networking), then press Connect";
+            Debug.LogError($"{_setupProblem}. They're saved in {UserData.ConfigPath}. Or turn on UseDebugChat to play without Twitch.");
+            return;
+        }
+
+        _setupProblem = null;
+        _twitch.ClientId = clientId;
+        _twitch.BotLogin = AppConfig.inst.GetS("TwitchBotLogin").Trim();
+        _twitch.TokenFilePath = Path.Combine(UserData.Folder, "livechat-tokens.json");
         _twitch.Connect(new LiveChatConnectConfig { ChannelName = channel });
+    }
+
+    /// <summary>Forgets the saved Twitch logins and logs in from scratch. Wired to the settings menu.</summary>
+    public void LogInToTwitchAgain()
+    {
+        if (_twitch == null)
+            return;
+
+        _twitch.Disconnect();
+        string tokens = Path.Combine(UserData.Folder, "livechat-tokens.json");
+        if (File.Exists(tokens))
+            File.Delete(tokens);
+        Debug.Log("Forgot the saved Twitch logins; logging in again.");
+        ConnectToTwitch();
     }
 
     private void StartDebugChat()
@@ -201,7 +243,9 @@ public class TwitchApi : MonoBehaviour
 
         try
         {
-            IReadOnlyDictionary<string, string> ids = await _twitch.EnsureRewardsAsync(rewards, removeUnlisted: true);
+            //Never removeUnlisted: games sharing this Twitch app (the same client ID, like chat-minigames)
+            //count as the same app, so their rewards would look unlisted and get deleted
+            IReadOnlyDictionary<string, string> ids = await _twitch.EnsureRewardsAsync(rewards, removeUnlisted: false);
             Debug.Log($"Channel point rewards ready: {ids.Count} of {rewards.Count}");
         }
         catch (Exception ex)
@@ -284,7 +328,7 @@ public class TwitchApi : MonoBehaviour
 
     public static async Task StartPoll(string title, List<string> choices, int durationSeconds)
     {
-        if (_twitch == null)
+        if (!IsConnected)
         {
             Debug.Log($"Skipping poll '{title}': not connected to Twitch.");
             return;
@@ -317,7 +361,7 @@ public class TwitchApi : MonoBehaviour
 
     public static async Task<TwitchPrediction> StartPrediction(PredictionObj predictionObj)
     {
-        if (_twitch == null)
+        if (!IsConnected)
         {
             Debug.Log($"Skipping prediction '{predictionObj.Title}': not connected to Twitch.");
             return null;

@@ -83,9 +83,9 @@ public class MusicDJ : MonoBehaviour
                 .OrderBy(file => file, StringComparer.OrdinalIgnoreCase));
         }
 
-        SetStatus(_tracks.Count == 0
-            ? $"No music found in {folder} (mp3, ogg or wav)"
-            : $"Music: {_tracks.Count} songs in {folder}");
+        //The on-screen status is one short line; the folder goes to the log
+        Debug.Log($"Music folder: {folder}");
+        SetStatus(_tracks.Count == 0 ? "No music found (mp3, ogg or wav)" : $"Music: {_tracks.Count} songs");
 
         if (_tracks.Count > 0 && _currentTrack == null)
             PlayNext();

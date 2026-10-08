@@ -1,67 +1,67 @@
 {
   "configData": {
     "TwitchChannel": {
-      "Menu": 0,
+      "Menu": 4,
       "Value": "",
       "UIDisplayText": "Twitch channel to connect to",
       "Personal": true
     },
     "TwitchBotLogin": {
-      "Menu": 0,
+      "Menu": 4,
       "Value": "",
       "UIDisplayText": "Twitch bot account (optional)",
       "Personal": true
     },
     "TwitchClientId": {
-      "Menu": 0,
+      "Menu": 4,
       "Value": "",
       "UIDisplayText": "Twitch app Client ID (Public client)",
       "Personal": true
     },
     "UseDebugChat": {
-      "Menu": 0,
+      "Menu": 4,
       "Value": false,
       "UIDisplayText": "Debug chat: play without Twitch, using an on-screen chat box (or start the game with -debugchat)",
       "Personal": true
     },
     "HelpText": {
-      "Menu": 0,
+      "Menu": 4,
       "Value": "More info and a list of all commands are located below on my stream page panels.",
       "UIDisplayText": "Reply to !help and !commands (empty = no reply)",
       "Personal": true
     },
     "WikiLink": {
-      "Menu": 0,
+      "Menu": 4,
       "Value": "",
       "UIDisplayText": "Link for !wiki (empty = no reply)",
       "Personal": true
     },
     "DiscordLink": {
-      "Menu": 0,
+      "Menu": 4,
       "Value": "",
       "UIDisplayText": "Discord invite for !discord (empty = no reply)",
       "Personal": true
     },
     "PatreonLink": {
-      "Menu": 0,
+      "Menu": 4,
       "Value": "",
       "UIDisplayText": "Link for !patreon (empty = no reply)",
       "Personal": true
     },
     "TtsAnnouncerVoice": {
-      "Menu": 1,
+      "Menu": 6,
       "Value": "en_US-joe-medium",
       "UIDisplayText": "Text to speech voice for announcements: a Piper voice in StreamingAssets/Piper/voices, or an installed Windows voice",
       "Personal": true
     },
     "TtsPlayerVoice": {
-      "Menu": 1,
+      "Menu": 6,
       "Value": "en_US-libritts_r-medium",
       "UIDisplayText": "Text to speech voice for players' chat (a multi-speaker Piper voice gives each player their own)",
       "Personal": true
     },
     "TtsRate": {
-      "Menu": 1,
+      "Menu": 6,
       "Value": 0,
       "UIDisplayText": "Text to speech speed (-10 to 10)",
       "Personal": true
@@ -79,7 +79,7 @@
       "Personal": true
     },
     "MusicFolder": {
-      "Menu": 1,
+      "Menu": 6,
       "Value": "",
       "UIDisplayText": "Music folder (empty = StreamingAssets/Music; only music licensed for streaming)",
       "Personal": true
@@ -228,6 +228,21 @@
       "Menu": 5,
       "Value": 15,
       "UIDisplayText": "DB Backup Frequency (minutes)"
+    },
+    "WindowWidth": {
+      "Menu": 6,
+      "Value": 1920,
+      "UIDisplayText": "Window width (pixels)"
+    },
+    "WindowHeight": {
+      "Menu": 6,
+      "Value": 1080,
+      "UIDisplayText": "Window height (pixels)"
+    },
+    "WindowMode": {
+      "Menu": 6,
+      "Value": "Windowed",
+      "UIDisplayText": "Window mode: Windowed, Borderless or Fullscreen"
     }
   },
   "volumes": {

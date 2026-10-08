@@ -204,10 +204,35 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Sizes the window from WindowWidth / WindowHeight / WindowMode in your config, every launch. Unity
+    /// otherwise reuses whatever size the window last had (or a -screen-width from the command line).
+    /// </summary>
+    private void ApplyWindowSettings()
+    {
+#if !UNITY_EDITOR
+        int width = AppConfig.inst.GetI("WindowWidth");
+        int height = AppConfig.inst.GetI("WindowHeight");
+        if (width <= 0 || height <= 0)
+            return;
+
+        FullScreenMode mode;
+        switch (AppConfig.inst.GetS("WindowMode").Trim().ToLowerInvariant())
+        {
+            case "borderless": mode = FullScreenMode.FullScreenWindow; break;
+            case "fullscreen": mode = FullScreenMode.ExclusiveFullScreen; break;
+            default: mode = FullScreenMode.Windowed; break;
+        }
+        Screen.SetResolution(width, height, mode);
+        Debug.Log($"Window: {width}x{height} {mode}");
+#endif
+    }
+
     private void LoadAppConfig()
     {
         AppConfig.Load();
         Debug.Log($"Your settings and player data are in {UserData.Folder}");
+        ApplyWindowSettings();
 
         //QuipBattlePrompts.LoadPrompts(promptsJSON);
 

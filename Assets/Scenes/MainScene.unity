@@ -675,7 +675,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Refresh Access Token in 15s
+  m_text: Log in to Twitch again
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -2139,7 +2139,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Ask for Bot Authorization
+  m_text: Connect to Twitch
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -5940,7 +5940,7 @@ GameObject:
   - component: {fileID: 439623560}
   - component: {fileID: 439623559}
   m_Layer: 5
-  m_Name: RefreshAccessTokenButton
+  m_Name: LogInAgainButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6012,7 +6012,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1081751822}
         m_TargetAssemblyTypeName: TwitchApi, Assembly-CSharp
-        m_MethodName: RefreshAccessTokenIn15s
+        m_MethodName: LogInToTwitchAgain
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -21017,7 +21017,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1081751822}
         m_TargetAssemblyTypeName: TwitchApi, Assembly-CSharp
-        m_MethodName: AskForBotAuthorization
+        m_MethodName: ConnectToTwitch
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
