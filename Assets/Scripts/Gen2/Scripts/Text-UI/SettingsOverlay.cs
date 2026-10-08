@@ -5,12 +5,14 @@ using System.ComponentModel;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 public class SettingsOverlay : MonoBehaviour
 {
     [SerializeField] private GameManager _gm;
-    [SerializeField] private SpotifyDJ _spotifyDJ; 
+    [FormerlySerializedAs("_spotifyDJ")]
+    [SerializeField] private MusicDJ _musicDJ;
     public MenuBar menuBar;
     public ScrollRect emptyScrollView;
     public GameObject emptyToggleEntry;
@@ -31,7 +33,8 @@ public class SettingsOverlay : MonoBehaviour
     public MyTTS enableKingTTS;
 
     [SerializeField] private TextMeshProUGUI _twitchTokenExpireTimerText;
-    [SerializeField] private TextMeshProUGUI _spotifyTokenExpireTimerText;
+    [FormerlySerializedAs("_spotifyTokenExpireTimerText")]
+    [SerializeField] private TextMeshProUGUI _musicStatusText;
     [SerializeField] private TextMeshPro _mainInstructionsText;
     [SerializeField] private TextMeshPro _inviteRewardDescription; 
 
@@ -71,7 +74,7 @@ public class SettingsOverlay : MonoBehaviour
             return;
 
         _twitchTokenExpireTimerText.SetText($"Twitch: {TwitchApi.StatusText}");
-        _spotifyTokenExpireTimerText.SetText($"Spotify Token Expire Timer: {_spotifyDJ._expirationTime.ToLocalTime()}");
+        _musicStatusText.SetText($"Now playing: {_musicDJ.NowPlaying}");
     }
     private void GenerateUIForConfigValues()
     {

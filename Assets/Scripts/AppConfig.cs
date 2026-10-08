@@ -10,8 +10,6 @@ using Unity.VisualScripting;
 using UnityEngine;
 
 // Load Balancer        http://chaosbotlb-1365055632.us-east-2.elb.amazonaws.com/
-// LocalHost            http://localhost
-// LocalHostPort        3001
 // LOCAL_PC_KEY         Bc2mMWjXCT2v83d3
 
 //                     0        1       2       3         4           5        6

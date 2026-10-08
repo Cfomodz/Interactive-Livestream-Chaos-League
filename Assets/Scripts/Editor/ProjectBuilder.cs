@@ -100,10 +100,6 @@ public class ProjectBuilder : EditorWindow
             //Delete the LocalPC key
             AppConfig.inst.SetV("LOCAL_PC_KEY", "");
 
-            //Delete the spotifyClient ID and secret
-            AppConfig.inst.SetV("SpotifyClientID", "");
-            AppConfig.inst.SetV("SpotifyClientSecret", "");
-
             //Delete the Load balancer URL
             AppConfig.inst.SetV("LoadBalancerURL", "");
 

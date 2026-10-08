@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UIElements;
 
 public class TwitchClient : MonoBehaviour
@@ -23,7 +24,8 @@ public class TwitchClient : MonoBehaviour
     [SerializeField] private PipeReleaser _attackPipe;
     [SerializeField] private DynamicSpriteAsset _dynamicSpriteAsset;
     [SerializeField] private DefaultDefenseV2 _defaultDefenseV2;
-    [SerializeField] private SpotifyDJ _spotifyDJ;
+    [FormerlySerializedAs("_spotifyDJ")]
+    [SerializeField] private MusicDJ _musicDJ;
 
     private TwitchLiveChatClient _client;
 
@@ -392,17 +394,17 @@ public class TwitchClient : MonoBehaviour
                 return;
             }
 
-            _ = _spotifyDJ.SearchAndPlay(messageId, split[1], ph);
+            _musicDJ.PlayRequest(messageId, split[1], ph);
         }
 
         else if (commandKey.StartsWith("!playlist"))
         {
-            ReplyToPlayer(messageId, ph.pp.TwitchUsername, $"Music Options: {AppConfig.inst.GetS("SpotifySafePlaylistURL")}"); 
+            ReplyToPlayer(messageId, ph.pp.TwitchUsername, _musicDJ.GetPlaylistText());
         }
 
         else if (ph.IsKing() && (commandKey.StartsWith("!skipsong") || commandKey.StartsWith("!skip song") || commandKey.StartsWith("!nextsong") || commandKey.StartsWith("!next song")))
         {
-            _ = _spotifyDJ.SkipSong();
+            _musicDJ.SkipSong();
         }
         
         else if (commandKey.StartsWith("!lava"))

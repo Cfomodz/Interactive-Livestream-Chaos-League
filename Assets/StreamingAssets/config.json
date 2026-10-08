@@ -57,40 +57,15 @@
       "Value": "",
       "UIDisplayText": "AWS Secret Key"
     },
-    "SpotifyClientID": {
-      "Menu": 4,
-      "Value": "e4eb01c54b2a41c385d1ce8d1e58eaae",
-      "UIDisplayText": "Spotify Client ID"
-    },
-    "SpotifyClientSecret": {
-      "Menu": 4,
+    "MusicFolder": {
+      "Menu": 1,
       "Value": "",
-      "UIDisplayText": "Spotify Client Secret"
-    },
-    "SpotifyRedirectPath": {
-      "Menu": 4,
-      "Value": "/spotifyToken",
-      "UIDisplayText": "Spotify Redirect Path"
-    },
-    "SpotifySafePlaylistURL": {
-      "Menu": 4,
-      "Value": "https://open.spotify.com/playlist/4P2LPOHaCPmSAyoTYEHuKA",
-      "UIDisplayText": "Spotify Safe Playlist ID"
+      "UIDisplayText": "Music folder (empty = StreamingAssets/Music; only music licensed for streaming)"
     },
     "LoadBalancerURL": {
       "Menu": 4,
       "Value": "",
       "UIDisplayText": "Load Balancer URL"
-    },
-    "HostToListenOn": {
-      "Menu": 4,
-      "Value": "http://localhost",
-      "UIDisplayText": "Host To Listen On"
-    },
-    "localHostPort": {
-      "Menu": 4,
-      "Value": 3001,
-      "UIDisplayText": "Local Host Port"
     },
     "LOCAL_PC_KEY": {
       "Menu": 4,
