@@ -132,6 +132,13 @@ public class TwitchApi : MonoBehaviour
         _twitch.ClientId = clientId;
         _twitch.BotLogin = AppConfig.inst.GetS("TwitchBotLogin").Trim();
         _twitch.TokenFilePath = Path.Combine(UserData.Folder, "livechat-tokens.json");
+        //Set once the broadcaster logs in; empty fields leave that part of the stream info alone
+        _twitch.StreamInfo = new TwitchStreamInfo
+        {
+            Title = AppConfig.inst.GetS("StreamTitle").Trim(),
+            Category = AppConfig.inst.GetS("StreamCategory").Trim(),
+            Tags = AppConfig.inst.GetS("StreamTags").Split(',').Select(tag => tag.Trim()).Where(tag => tag.Length > 0).ToArray()
+        };
         _twitch.Connect(new LiveChatConnectConfig { ChannelName = channel });
     }
 

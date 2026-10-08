@@ -60,6 +60,8 @@ Builds contain no personal data, so they're safe to share.
    `%USERPROFILE%\AppData\LocalLow\ChaosLeague\Chaos League\config.json`, with your details
    blank. Fill in `TwitchChannel` and `TwitchClientId` (and optionally `TwitchBotLogin`, your
    `!help` text and the `!wiki` / `!discord` / `!patreon` links), then restart the game.
+   `StreamTitle`, `StreamCategory` and `StreamTags` (comma-separated) set your stream info when
+   the game connects; leave any of them empty to leave it as it is.
 4. **Log in.** The game opens Twitch's activation page twice: once for the bot account, once for
    your own (broadcaster) account. Logins are saved and refreshed automatically.
 

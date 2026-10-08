@@ -18,6 +18,24 @@
       "UIDisplayText": "Twitch app Client ID (Public client)",
       "Personal": true
     },
+    "StreamTitle": {
+      "Menu": 4,
+      "Value": "",
+      "UIDisplayText": "Stream title, set when the game connects (empty = leave it)",
+      "Personal": true
+    },
+    "StreamCategory": {
+      "Menu": 4,
+      "Value": "",
+      "UIDisplayText": "Stream category by name, e.g. Games + Demos (empty = leave it)",
+      "Personal": true
+    },
+    "StreamTags": {
+      "Menu": 4,
+      "Value": "",
+      "UIDisplayText": "Stream tags, comma-separated: up to 10, letters and digits only (empty = leave them)",
+      "Personal": true
+    },
     "UseDebugChat": {
       "Menu": 4,
       "Value": false,
