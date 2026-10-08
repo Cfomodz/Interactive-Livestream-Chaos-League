@@ -24,6 +24,37 @@
       "UIDisplayText": "Debug chat: play without Twitch, using an on-screen chat box (or start the game with -debugchat)",
       "Personal": true
     },
+    "ObsEnabled": {
+      "Menu": 4,
+      "Value": false,
+      "UIDisplayText": "OBS control: let the broadcaster switch scenes and start or stop the stream from chat",
+      "Personal": true
+    },
+    "ObsUrl": {
+      "Menu": 4,
+      "Value": "",
+      "UIDisplayText": "OBS websocket URL (empty = ws://127.0.0.1:4455)",
+      "Personal": true
+    },
+    "ObsPassword": {
+      "Menu": 4,
+      "Value": "",
+      "UIDisplayText": "OBS websocket password (OBS: Tools, WebSocket Server Settings)",
+      "Personal": true,
+      "Secret": true
+    },
+    "ObsStartingScene": {
+      "Menu": 4,
+      "Value": "",
+      "UIDisplayText": "OBS scene for !clscene starting (optional)",
+      "Personal": true
+    },
+    "ObsGameScene": {
+      "Menu": 4,
+      "Value": "",
+      "UIDisplayText": "OBS scene with the game; !clgolive switches to it first (optional)",
+      "Personal": true
+    },
     "HelpText": {
       "Menu": 4,
       "Value": "More info and a list of all commands are located below on my stream page panels.",

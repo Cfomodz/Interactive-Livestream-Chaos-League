@@ -215,7 +215,25 @@ public class TwitchClient : MonoBehaviour
             return;
         }
 
+        //OBS control (broadcaster only): !clscene, !clgolive, !clend, !clobs
+        string[] words = msg.Substring(1).Split(new[] { ' ' }, 2);
+        if (TwitchApi.ObsCommands != null && TwitchApi.ObsCommands.Handles(words[0]))
+            _ = RunObsCommand(messageId, ph, words[0], words.Length > 1 ? words[1] : "");
+    }
 
+    private async System.Threading.Tasks.Task RunObsCommand(string messageId, PlayerHandler ph, string command, string args)
+    {
+        try
+        {
+            string reply = await TwitchApi.ObsCommands.Run(command, args, Time.realtimeSinceStartupAsDouble);
+            if (!string.IsNullOrEmpty(reply))
+                ReplyToPlayer(messageId, ph.pp.TwitchUsername, reply.Length > 450 ? reply.Substring(0, 450) : reply);
+        }
+        catch (Exception e)
+        {
+            //A bad OBS command must never take the stream down
+            Debug.LogError($"OBS command !{command} failed: {e}");
+        }
     }
 
     private void ReplyFromConfig(string messageId, PlayerHandler ph, string configKey, string format)

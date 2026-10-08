@@ -51,8 +51,28 @@ public class TwitchApi : MonoBehaviour
     public static int LavaRewardCost => AppConfig.inst.GetI("ThroneLavaCost") * 3; //3 times as expensive as bits
     public static int WaterRewardCost => AppConfig.inst.GetI("ThroneWaterCost") * 3;
 
+    /// <summary>OBS control (ObsEnabled in your config), or null when it's off.</summary>
+    public static LiveChat.Obs.ObsController Obs { get; private set; }
+    /// <summary>The broadcaster's OBS chat commands: !clscene, !clgolive, !clend, !clobs. Null when OBS control is off.</summary>
+    public static LiveChat.Obs.ObsChatCommands ObsCommands { get; private set; }
+
+    private void StartObs()
+    {
+        Obs = LiveChat.Obs.ObsController.Create(gameObject, new LiveChat.Obs.ObsSettings
+        {
+            enabled = AppConfig.inst.GetB("ObsEnabled"),
+            url = AppConfig.inst.GetS("ObsUrl"),
+            password = AppConfig.inst.GetS("ObsPassword"),
+            startingScene = AppConfig.inst.GetS("ObsStartingScene"),
+            gameScene = AppConfig.inst.GetS("ObsGameScene")
+        });
+        ObsCommands = Obs == null ? null : new LiveChat.Obs.ObsChatCommands(Obs, "cl");
+    }
+
     private void Start()
     {
+        StartObs();
+
         bool debugChat = AppConfig.inst.GetB("UseDebugChat")
             || Environment.GetCommandLineArgs().Any(arg => string.Equals(arg, "-debugchat", StringComparison.OrdinalIgnoreCase));
         if (debugChat)

@@ -68,6 +68,24 @@ defaults in `Assets/StreamingAssets/config.sample.json`. The same folder holds t
 database, its backups, the emote cache and the Twitch logins. It's outside the repo and the build
 folder, so commits can't include it and rebuilds can't overwrite it.
 
+### OBS control
+
+The game can switch OBS scenes and start or stop the stream from your own chat, through
+obs-websocket (built into OBS 28 and later). In OBS, open **Tools → WebSocket Server Settings**,
+enable the server and set a password. Then fill in the OBS settings on the settings menu's
+Networking page (or your config): `ObsEnabled`, `ObsUrl` (empty means `ws://127.0.0.1:4455`),
+`ObsPassword` (masked, never logged), and optionally `ObsStartingScene` and `ObsGameScene`.
+
+| Command (broadcaster only) | Does |
+|---|---|
+| `!clscene <name>` | Switch the scene. `starting` and `game` use the scenes above; part of a name works if it's unique |
+| `!clgolive` | Switch to the game scene (if set), then start streaming |
+| `!clend` | Asks to confirm: `!clend` again within 15 s (or `!clend confirm`) stops the stream; `!clend cancel` doesn't |
+| `!clobs` | OBS status: connected, live, current scene |
+
+The game only starts or stops the stream on these commands, never on its own. The settings menu
+shows an OBS status line next to the Twitch one.
+
 ### Playing without Twitch (debug chat)
 
 Set `UseDebugChat` to `true` in your config, or start the game with `-debugchat`, to play without

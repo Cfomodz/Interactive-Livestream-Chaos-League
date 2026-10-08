@@ -73,7 +73,7 @@ public class SettingsOverlay : MonoBehaviour
         if (!_originRoot.gameObject.activeSelf)
             return;
 
-        _twitchTokenExpireTimerText.SetText($"Twitch: {TwitchApi.StatusText}");
+        _twitchTokenExpireTimerText.SetText($"Twitch: {TwitchApi.StatusText}" + (TwitchApi.Obs != null ? $"   {TwitchApi.Obs.StatusLine}" : ""));
         _musicStatusText.SetText($"Now playing: {_musicDJ.NowPlaying}");
     }
     private void GenerateUIForConfigValues()
@@ -139,6 +139,8 @@ public class SettingsOverlay : MonoBehaviour
                     inputField.contentType = TMP_InputField.ContentType.IntegerNumber;
                 else if (valueType == typeof(float) || valueType == typeof(double))
                     inputField.contentType = TMP_InputField.ContentType.DecimalNumber;
+                else if (cfgEntry.Secret)
+                    inputField.contentType = TMP_InputField.ContentType.Password;
                 else
                     inputField.contentType = TMP_InputField.ContentType.Standard;
 

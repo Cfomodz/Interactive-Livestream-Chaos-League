@@ -39,6 +39,9 @@ public class ConfigItem : INotifyPropertyChanged
     /// <summary>Your own details (channel, links, keys): always written to your config so they're easy to find and fill in.</summary>
     public bool Personal { get; set; }
 
+    /// <summary>A password or key: the settings menu masks it, since the menu can end up on stream.</summary>
+    public bool Secret { get; set; }
+
 
     public event PropertyChangedEventHandler PropertyChanged;
 
