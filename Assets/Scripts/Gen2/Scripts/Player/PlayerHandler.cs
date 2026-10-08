@@ -1,15 +1,12 @@
 ﻿
 using Amazon.Runtime.Internal.Endpoints.StandardLibrary;
+using LiveChat.Twitch;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using TMPro;
-using TwitchLib.Api.Helix;
-using TwitchLib.Api.Helix.Models.Charity.GetCharityCampaign;
-using TwitchLib.Api.Helix.Models.Users.GetUsers;
-using TwitchLib.Client.Models;
 using Unity.Loading;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -155,10 +152,10 @@ public class PlayerHandler : MonoBehaviour, TravelingIndicatorIO, TI_Bid_IO
 
     public IEnumerator LoadBallPfp()
     {
-        var t = Task.Run(async () => await TwitchApi.GetUserByUsername(pp.TwitchUsername));
+        var t = TwitchApi.GetUserByUsername(pp.TwitchUsername);
         yield return new WaitUntil(() => t.IsCompleted);
 
-        User user = t.Result; 
+        TwitchUser user = t.Result;
 
         if(user == null)
         {

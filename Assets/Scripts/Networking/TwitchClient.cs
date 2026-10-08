@@ -1,6 +1,3 @@
-// If type or namespace TwitchLib could not be found. Make sure you add the latest TwitchLib.Unity.dll to your project folder
-// Download it here: https://github.com/TwitchLib/TwitchLib.Unity/releases
-// Or download the repository at https://github.com/TwitchLib/TwitchLib.Unity, build it, and copy the TwitchLib.Unity.dll from the output directory
 using Amazon.Runtime.Internal.Endpoints.StandardLibrary;
 using LiveChat;
 using LiveChat.Twitch;
@@ -29,31 +26,21 @@ public class TwitchClient : MonoBehaviour
 
     private TwitchLiveChatClient _client;
 
-    public void Init(string channelName, string botAccessToken)
+    public void Init(TwitchLiveChatClient client)
     {
-        if (_client == null)
-            _client = GetComponent<TwitchLiveChatClient>();
+        if (_client != null)
+        {
+            _client.Connected -= OnConnected;
+            _client.JoinedChannel -= OnJoinedChannel;
+            _client.MessageReceived -= OnMessageReceived;
+            _client.Error -= OnError;
+        }
 
-        if (_client == null)
-            _client = gameObject.AddComponent<TwitchLiveChatClient>();
-
-        _client.Connected -= OnConnected;
-        _client.JoinedChannel -= OnJoinedChannel;
-        _client.MessageReceived -= OnMessageReceived;
-        _client.Error -= OnError;
-
+        _client = client;
         _client.Connected += OnConnected;
         _client.JoinedChannel += OnJoinedChannel;
         _client.MessageReceived += OnMessageReceived;
         _client.Error += OnError;
-
-        _client.Connect(new LiveChatConnectConfig
-        {
-            ChannelName = channelName,
-            BotAccessToken = botAccessToken
-        });
-
-        Debug.Log("Done Initializing Twitch Client");
     }
 
     private void OnConnected()
@@ -83,15 +70,18 @@ public class TwitchClient : MonoBehaviour
         Debug.Log($"Found name color in message: {MyUtil.ColorToHexString(usernameColor)}");
         string rawMsg = message.RawMessage;
         bool isSubscriber = message.IsSubscriber;
-        bool isFirstMessage = message.IsFirstMessage;
         int bits = message.Bits;
-        bool isAdmin = (twitchId == Secrets.CHANNEL_ID); //e.chatmessage.isMe doesn't work for some reason
+        bool isAdmin = message.IsBroadcaster;
 
-        //Debug.Log($"Total emotes: {message.Emotes?.Count ?? 0} rawIrcMsg: {message.RawIrcMessage}");
         List<LiveChatEmote> emotes = message.Emotes ?? new List<LiveChatEmote>();
         emotes.Sort((emote1, emote2) => emote1.StartIndex.CompareTo(emote2.StartIndex));
 
-        StartCoroutine(HandleMessage(messageId, twitchId, twitchUsername, usernameColor, rawMsg, emotes, isSubscriber, isFirstMessage, bits, isAdmin));
+        //Twitch doesn't flag a viewer's first message anymore; HandleMessage treats a player new to the database as first-time
+        StartCoroutine(HandleMessage(messageId, twitchId, twitchUsername, usernameColor, rawMsg, emotes, isSubscriber, isFirstMessage: false, bits, isAdmin));
+
+        //Cheers arrive on the chat message
+        if (bits > 0)
+            StartCoroutine(_twitchPubSub.HandleOnBitsReceived(twitchId, twitchUsername, rawMsg, bits));
 
         //If the message is a hype chat, give them the multiplier zone
         //e.ChatMessage.user
@@ -133,6 +123,12 @@ public class TwitchClient : MonoBehaviour
         {
             Debug.LogError($"Failed to get or create player handler {twitchId} {twitchUsername} in twitch client handle message");
             yield break;
+        }
+
+        if (ph.pp.IsNew)
+        {
+            isFirstMessage = true;
+            ph.pp.IsNew = false;
         }
 
         ph.pp.LastInteraction = DateTime.Now;
@@ -181,11 +177,15 @@ public class TwitchClient : MonoBehaviour
             PingReplyPlayer(username, message);
             return;
         }
-        _client.SendReply(Secrets.CHANNEL_NAME, messageId, $"[BOT] {message}"); 
+        if (_client == null)
+            return;
+        _client.SendReply(messageId, $"[BOT] {message}");
     }
     public void PingReplyPlayer(string twitchUsername, string message)
     {
-        _client.SendMessage(Secrets.CHANNEL_NAME, $"[BOT] @{twitchUsername} {message}"); 
+        if (_client == null)
+            return;
+        _client.SendMessage($"[BOT] @{twitchUsername} {message}");
     }
 
     private void ProcessAdminCommands(string messageId, PlayerHandler ph, string msg, int bits)
@@ -648,26 +648,16 @@ public class TwitchClient : MonoBehaviour
         if(emotes == null || emotes.Count <= 0)
             return rawMsg;
 
+        //Emote indexes are positions in the C# string, so emoji (surrogate pairs) need no correction
         StringBuilder noEmotesSb = new StringBuilder();
         int currEmoteIndex = 0;
         var currEmote = emotes[currEmoteIndex];
-        int highSurrogatesFound = 0;
         for (int i = 0; i < rawMsg.Length; i++)
         {
-
-            // NOTE: This is necessary because twitch doesn't correctly count the startindex and endindex when emojis are mixed in
-            // If the character is a high surrogate (first part of a surrogate pair), 
-            // increment the index to skip the low surrogate (second part of the surrogate pair)
-            if (char.IsHighSurrogate(rawMsg[i]))
-            {
-                Debug.Log($"Found high surrogate at index {i}");
-                highSurrogatesFound++;
-            }
-
             //If we're in the range of an emote, skip to the end
-            if (currEmote.StartIndex + highSurrogatesFound <= i && i <= currEmote.EndIndex + highSurrogatesFound)
+            if (currEmote.StartIndex <= i && i <= currEmote.EndIndex)
             {
-                i = currEmote.EndIndex + highSurrogatesFound;
+                i = currEmote.EndIndex;
 
                 currEmoteIndex++;
                 if (currEmoteIndex < emotes.Count)

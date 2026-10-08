@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using TwitchLib.PubSub.Models.Responses.Messages.Redemption;
 using UnityEngine;
 using UnityEngine.UIElements;
 

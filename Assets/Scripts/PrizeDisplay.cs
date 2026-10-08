@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
-using TwitchLib.Api.Helix.Models.Charity.GetCharityCampaign;
 using UnityEngine;
 
 public class PrizeDisplay : MonoBehaviour

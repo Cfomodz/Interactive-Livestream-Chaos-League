@@ -198,23 +198,13 @@ public class DynamicSpriteAsset : MonoBehaviour
             }
         }
 
+        //Emote indexes are positions in the C# string, so emoji (surrogate pairs) need no correction
         int currEmoteIndex = 0;
         var currEmote = emotes[currEmoteIndex];
-        int highSurrogatesFound = 0; 
         for (int i = 0; i < rawMsg.Length; i++)
         {
-
-            // NOTE: This is necessary because twitch doesn't correctly count the startindex and endindex when emojis are mixed in
-            // If the character is a high surrogate (first part of a surrogate pair), 
-            // increment the index to skip the low surrogate (second part of the surrogate pair)
-            if (char.IsHighSurrogate(rawMsg[i]))
-            {
-                Debug.Log($"Found high surrogate at index {i}"); 
-                highSurrogatesFound++;
-            }
-
             //If we're in the range of an emote, append the sprite insertion and skip to the end
-            if (currEmote.StartIndex + highSurrogatesFound <= i && i <= currEmote.EndIndex + highSurrogatesFound)
+            if (currEmote.StartIndex <= i && i <= currEmote.EndIndex)
             {
                 int emoteIndex = -1;
                 AppConfig.inst.downloadedEmoteIndexMap.TryGetValue(currEmote.Id, out emoteIndex);
@@ -223,7 +213,7 @@ public class DynamicSpriteAsset : MonoBehaviour
                 else
                     _spriteInfusedMsg.Append($"<sprite=\"dynamicSpriteAsset\" index={emoteIndex}>"); ///name=\"Emote{currEmote.Id}\">");
 
-                i = currEmote.EndIndex + highSurrogatesFound;
+                i = currEmote.EndIndex;
 
                 currEmoteIndex++;
                 if (currEmoteIndex < emotes.Count)

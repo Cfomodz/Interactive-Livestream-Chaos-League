@@ -256,62 +256,6 @@ public class MyHttpServerV2 : MonoBehaviour
 
         }
 
-        if(request.Url.LocalPath == "/authCallback")
-        {
-            if (!request.IsLocal)
-                return UnauthorisedResponse();
-
-            Debug.Log("Inside /authCallback"); 
-
-            return Encoding.UTF8.GetBytes(@"
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>OAuth Callback</title>
-                    <script type='text/javascript'>
-                        // JavaScript to extract token and send to /receiveToken
-                        if (window.location.hash) {
-                            let hash = window.location.hash.substring(1);
-                            let params = new URLSearchParams(hash);
-                            let accessToken = params.get('access_token');
-                            let state = params.get('state');
-                            window.location.href = 'http://localhost:3001/receiveBotAuthCode?access_token=' + accessToken + '&state=' + state;
-                        }
-                    </script>
-                </head>
-                <body>
-                    Processing authentication...
-                </body>
-                </html>");
-        }
-
-        if (request.Url.LocalPath == "/receiveBotAuthCode")
-        {
-            if (!request.IsLocal)
-                return UnauthorisedResponse();
-
-            string twitchState = request.QueryString.Get("state");
-            if (_twitchApi._state != twitchState)
-                return UnauthorisedResponse();
-
-            Debug.Log($"inside receivebotauthcode. request RawUrl: {request.RawUrl}");
-
-            //How can I extract the access_token from the fragment in the request here?
-
-            string code = request.QueryString.Get("code");
-            string accessToken = request.QueryString.Get("access_token");
-            Debug.Log($"accessToken in receivebotauthcode [{accessToken}]"); 
-            //var tokenResponse = await _discordOauthHandler.TradeAuthCodeForTokenResponse(code);
-            if(string.IsNullOrEmpty(accessToken))
-                accessToken = await TwitchApi.TradeBOTAuthCodeForTokenResp(code);
-
-            await UnityMainThreadDispatcher.Instance().EnqueueAsync(async () => await _twitchApi.InitializeTwitchConnections(accessToken));
-
-            // If we made it all the way here, SUCCESS
-            return Encoding.UTF8.GetBytes(
-                        $"<h1>Retreived Access Token in Local Http Server. You can close this window.</h1>");
-
-        }
         if (request.Url.LocalPath == "/spotifyToken") // Receive NGROK signal /TODO: Change this path to specify [/updatePlayerFromDB]
         {
             if (!request.IsLocal)

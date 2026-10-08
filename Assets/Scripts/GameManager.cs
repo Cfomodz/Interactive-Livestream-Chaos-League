@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LiveChat.Twitch;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -7,8 +8,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using TwitchLib.Api.Helix.Models.Users.GetUsers;
-using TwitchLib.Client.Models;
 using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
@@ -146,10 +145,10 @@ public class GameManager : MonoBehaviour
             yield break;
         }
 
-        var t = Task.Run(async () => await TwitchApi.GetUserByUsername(twitchUsername));
+        var t = TwitchApi.GetUserByUsername(twitchUsername);
         yield return new WaitUntil(() => t.IsCompleted);
 
-        User user = t.Result;
+        TwitchUser user = t.Result;
 
         if(user == null)
         {
@@ -293,7 +292,7 @@ public class GameManager : MonoBehaviour
     }
 
 
-    public IEnumerator HandleInviteSignal(User invitedUser, User invitorUser)
+    public IEnumerator HandleInviteSignal(TwitchUser invitedUser, TwitchUser invitorUser)
     {
         Debug.Log($"handling invite signal in game manager {invitedUser.Id} {invitorUser.Id}");
 

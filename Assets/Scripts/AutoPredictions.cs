@@ -1,9 +1,9 @@
+using LiveChat.Twitch;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using TwitchLib.Api.Helix.Models.Predictions;
 using UnityEngine;
 
 
@@ -12,7 +12,7 @@ public class AutoPredictions : MonoBehaviour
 {
     [SerializeField] private List<PredictionObj> _predictions;
     private int _currPredictionIndex = 0;
-    private Prediction _runningPrediction = null;
+    private TwitchPrediction _runningPrediction = null;
 
     //[SerializeField] private bool _initPredictionsButton;
 
@@ -230,9 +230,9 @@ public class AutoPredictions : MonoBehaviour
     }
 
 
-    private string GetOutcomeIdByTitle(Outcome[] outcomes, string title)
+    private string GetOutcomeIdByTitle(List<TwitchPredictionOutcome> outcomes, string title)
     {
-        foreach(Outcome outcome in outcomes)
+        foreach(TwitchPredictionOutcome outcome in outcomes)
         {
             if (string.Equals(outcome.Title.Trim(), title.Trim(), StringComparison.OrdinalIgnoreCase))
                 return outcome.Id;

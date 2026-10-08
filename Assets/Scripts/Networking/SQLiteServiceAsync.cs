@@ -147,6 +147,7 @@ public class SQLiteServiceAsync : MonoBehaviour
 
             pp = new PlayerProfile();
             pp.TwitchID = twitchID;
+            pp.IsNew = true;
             Debug.Log("Done getting player from DB");
 
             return pp;

@@ -14,46 +14,24 @@ public class TwitchPubSub : MonoBehaviour
     [SerializeField] private BitTrigger _waterBitTrigger;
     [SerializeField] private RebellionController _rebellionController;
 
-    private TwitchPubSubClient _pubSub;
+    // Stream events (channel points, subs, gifts) from the live chat client. The name is from when these
+    // came over Twitch PubSub, which Twitch shut down; they now arrive through EventSub. Bits arrive on
+    // chat messages, and TwitchClient passes them to HandleOnBitsReceived.
+    private TwitchLiveChatClient _client;
 
-    public void Init(string channelID, string botAccessToken)
+    public void Init(TwitchLiveChatClient client)
     {
-        if (_pubSub == null)
-            _pubSub = GetComponent<TwitchPubSubClient>();
+        if (_client != null)
+        {
+            _client.ChannelPointsRedeemed -= OnChannelPointsRedeemed;
+            _client.Subscribed -= OnChannelSubscription;
+            _client.SubscriptionGifted -= OnGiftSubscription;
+        }
 
-        if (_pubSub == null)
-            _pubSub = gameObject.AddComponent<TwitchPubSubClient>();
-
-        _pubSub.Connected -= OnPubSubServiceConnected;
-        _pubSub.ChannelPointsRedeemed -= OnChannelPointsRedeemed;
-        _pubSub.RewardRedeemed -= OnRewardRedeemed;
-        _pubSub.BitsReceived -= OnBitsReceived;
-        _pubSub.SubscriptionReceived -= OnChannelSubscription;
-        _pubSub.GiftSubscriptionReceived -= OnGiftSubscription;
-        _pubSub.WhisperReceived -= OnWhisper;
-        _pubSub.Error -= OnPubSubError;
-
-        _pubSub.Connected += OnPubSubServiceConnected;
-        _pubSub.ChannelPointsRedeemed += OnChannelPointsRedeemed;
-        _pubSub.RewardRedeemed += OnRewardRedeemed;
-        _pubSub.BitsReceived += OnBitsReceived;
-        _pubSub.SubscriptionReceived += OnChannelSubscription;
-        _pubSub.GiftSubscriptionReceived += OnGiftSubscription;
-        _pubSub.WhisperReceived += OnWhisper;
-        _pubSub.Error += OnPubSubError;
-
-        _pubSub.Connect(channelID, botAccessToken);
-        Debug.Log($"Done Initializing PubSub");
-    }
-
-    private void OnPubSubServiceConnected()
-    {
-        Debug.Log("Connected to Twitch PubSub!");
-    }
-
-    private void OnPubSubError(Exception exception)
-    {
-        Debug.LogError($"PubSub error: {exception}");
+        _client = client;
+        _client.ChannelPointsRedeemed += OnChannelPointsRedeemed;
+        _client.Subscribed += OnChannelSubscription;
+        _client.SubscriptionGifted += OnGiftSubscription;
     }
 
     private void OnChannelPointsRedeemed(LiveChatChannelPointsRedemption redemption)
@@ -63,9 +41,14 @@ public class TwitchPubSub : MonoBehaviour
 
         Debug.Log($"reward redeemed rewardID: {redemption.RewardId} redemptionID: {redemption.RedemptionId}");
 
-        StartCoroutine(HandleOnChannelPointsRedeemed(redemption.UserId, redemption.Username, redemption.RewardTitle, redemption.UserInput, redemption.Cost));
+        StartCoroutine(HandleOnChannelPointsRedeemed(redemption.UserId, redemption.Username, redemption.RewardTitle, redemption.UserInput, redemption.Cost, redemption));
     }
-    public IEnumerator HandleOnChannelPointsRedeemed(string twitchId, string twitchUsername, string rewardTitle, string msg, int cost)
+
+    /// <summary>
+    /// Handles a redemption, then fulfils it, or refunds it if the player couldn't be loaded.
+    /// Redemptions left unfulfilled are refunded the next time the game starts.
+    /// </summary>
+    public IEnumerator HandleOnChannelPointsRedeemed(string twitchId, string twitchUsername, string rewardTitle, string msg, int cost, LiveChatChannelPointsRedemption redemption = null)
     {
         //Get the player handler of the player redeeming tickets
         CoroutineResult<PlayerHandler> coResult = new CoroutineResult<PlayerHandler>();
@@ -75,6 +58,7 @@ public class TwitchPubSub : MonoBehaviour
         if (ph == null)
         {
             Debug.LogError("Failed to find player handler");
+            _client?.CompleteRedemption(redemption, fulfilled: false);
             yield break;
         }
 
@@ -89,17 +73,7 @@ public class TwitchPubSub : MonoBehaviour
         else
             _ticketHandler.BidRedemption(ph, cost, BidType.ChannelPoints);
 
-    }
-
-    private void OnBitsReceived(LiveChatBitsEvent bitsEvent)
-    {
-        if (bitsEvent == null)
-            return;
-
-        Debug.Log($"Inside bits received v2 total bits: {bitsEvent.TotalBitsUsed} {bitsEvent.BitsUsed}");
-        //Bits used is the amount contained in the message, total bits sums up the total bits the user has donated over time. Not sure over what timespan.
-
-        StartCoroutine(HandleOnBitsReceived(bitsEvent.UserId, bitsEvent.Username, bitsEvent.ChatMessage, bitsEvent.BitsUsed));
+        _client?.CompleteRedemption(redemption, fulfilled: true);
     }
 
     public IEnumerator HandleOnBitsReceived(string twitchId, string twitchUsername, string rawMsg, int bitsInMessage)
@@ -140,14 +114,6 @@ public class TwitchPubSub : MonoBehaviour
         _ticketHandler.BidRedemption(ph, bitsInMessage, BidType.Bits);
     }
 
-    private void OnRewardRedeemed(LiveChatRewardRedemption redemption)
-    {
-        if (redemption == null)
-            return;
-
-        Debug.Log($"reward redeemed: {redemption.RewardTitle} {redemption.RewardCost} message {redemption.Message}");
-    }
-
     private void OnChannelSubscription(LiveChatSubscriptionEvent subEvent)
     {
         if (!AppConfig.inst.GetB("EnableNewSubTrigger"))
@@ -156,7 +122,7 @@ public class TwitchPubSub : MonoBehaviour
         if (subEvent == null)
             return;
 
-        StartCoroutine(HandleOnSubscription(subEvent.UserId, subEvent.Username, subEvent.MultiMonthDuration, subEvent.Plan));
+        StartCoroutine(HandleOnSubscription(subEvent.UserId, subEvent.Username, Math.Max(1, subEvent.DurationMonths), subEvent.Plan));
     }
 
     private void OnGiftSubscription(LiveChatGiftSubscriptionEvent giftEvent)
@@ -167,7 +133,14 @@ public class TwitchPubSub : MonoBehaviour
         if (giftEvent == null)
             return;
 
-        StartCoroutine(HandleGiftSubscription(giftEvent.GifterUserId, giftEvent.GifterUsername, giftEvent.RecipientUserId, giftEvent.RecipientUsername, giftEvent.MultiMonthDuration, giftEvent.Plan));
+        //Anonymous gifts have no player to give the bonus to
+        if (giftEvent.GifterIsAnonymous || string.IsNullOrEmpty(giftEvent.GifterUserId))
+        {
+            CLDebug.Inst.ReportDonation("NEW GIFT SUB", $"An anonymous gifter gifted {giftEvent.RecipientUsername} {giftEvent.DurationMonths} {giftEvent.Plan}");
+            return;
+        }
+
+        StartCoroutine(HandleGiftSubscription(giftEvent.GifterUserId, giftEvent.GifterUsername, giftEvent.RecipientUserId, giftEvent.RecipientUsername, Math.Max(1, giftEvent.DurationMonths), giftEvent.Plan));
     }
 
     public IEnumerator HandleOnSubscription(string twitchId, string username, int MultiMonthDuration, LiveChatSubscriptionPlan subPlan)
@@ -227,16 +200,13 @@ public class TwitchPubSub : MonoBehaviour
         _ticketHandler.BidRedemption(ph, bidAmount, BidType.NewSubBonus);
     }
 
-    private void OnWhisper(string message)
-    {
-        Debug.Log($"{message}");
-        // Do your bits logic here.
-    }
-
     private void OnDestroy()
     {
-        // Cleanup when the object is destroyed
-        if(_pubSub != null )
-            _pubSub.Disconnect();
+        if (_client != null)
+        {
+            _client.ChannelPointsRedeemed -= OnChannelPointsRedeemed;
+            _client.Subscribed -= OnChannelSubscription;
+            _client.SubscriptionGifted -= OnGiftSubscription;
+        }
     }
 }

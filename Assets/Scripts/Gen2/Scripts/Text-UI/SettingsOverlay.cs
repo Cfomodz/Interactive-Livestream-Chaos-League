@@ -70,7 +70,7 @@ public class SettingsOverlay : MonoBehaviour
         if (!_originRoot.gameObject.activeSelf)
             return;
 
-        _twitchTokenExpireTimerText.SetText($"Twitch Token Expire Timer: {TwitchApi._expirationTime.ToLocalTime()}");
+        _twitchTokenExpireTimerText.SetText($"Twitch: {TwitchApi.StatusText}");
         _spotifyTokenExpireTimerText.SetText($"Spotify Token Expire Timer: {_spotifyDJ._expirationTime.ToLocalTime()}");
     }
     private void GenerateUIForConfigValues()

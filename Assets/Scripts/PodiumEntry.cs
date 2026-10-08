@@ -1,8 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
-using TwitchLib.Api.Helix.Models.Soundtrack;
-using TwitchLib.PubSub.Events;
 using UnityEngine;
 
 public class PodiumEntry : MonoBehaviour, TravelingIndicatorIO

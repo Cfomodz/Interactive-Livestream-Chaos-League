@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TMPro;
-using TwitchLib.Api.Helix.Models.Polls.CreatePoll;
 using UnityEngine;
 
 //MAX PLAYERS: 5, Due to poll limitation on twitch
@@ -82,10 +81,10 @@ public class QuipBattleGame : Game
         for (int i = _gt.AlivePlayers.Count; i < _voteCountTexts.Length; i++)
             _voteCountTexts[i].SetText(""); 
 
-        List<Choice> pollChoices = new List<Choice>();
+        List<string> pollChoices = new List<string>();
         for(int i = 0; i < _gt.AlivePlayers.Count; i++)
         {
-            pollChoices.Add(new Choice { Title = _gt.AlivePlayers[i].pp.TwitchUsername });
+            pollChoices.Add(_gt.AlivePlayers[i].pp.TwitchUsername);
         }
 
         _ = TwitchApi.StartPoll("Who has the funniest response?", pollChoices, _pollDurationSeconds);
@@ -93,21 +92,23 @@ public class QuipBattleGame : Game
         StartCoroutine(RunGame(_gt)); 
     }
 
+    private static async Task<List<LiveChat.Twitch.TwitchPollChoice>> GetPollResults()
+    {
+        try
+        {
+            return await TwitchApi.GetPollResults();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Error fetching poll results: {ex.Message}");
+            return null; // Indicate failure
+        }
+    }
+
     private IEnumerator GetVotesListV2(CoroutineResult<List<(int votes, string username)>> coResult)
     {
         Debug.Log("Getting poll results");
-        var t = Task.Run(async () =>
-        {
-            try
-            {
-                return await TwitchApi.GetPollResults();
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Error fetching poll results: {ex.Message}");
-                return null; // Indicate failure
-            }
-        });
+        var t = GetPollResults();
 
         float timeout = 4f; // 10 seconds timeout
         float startTime = Time.time;

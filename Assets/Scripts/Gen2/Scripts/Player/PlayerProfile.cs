@@ -11,8 +11,13 @@ using System.Linq;
 
 public class PlayerProfile
 {
-    [PrimaryKey] 
+    [PrimaryKey]
     public string TwitchID { get; set; }
+
+    /// <summary>Not in the database yet: this is the player's first time in the game. Not saved.</summary>
+    [Ignore, JsonIgnore]
+    public bool IsNew { get; set; }
+
     public string TwitchUsername { get; set; }
     public string InvitedByID { get; set; }
     public string InvitesJSON { get; set; }

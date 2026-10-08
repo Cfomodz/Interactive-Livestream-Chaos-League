@@ -217,6 +217,21 @@
       "Value": true,
       "UIDisplayText": "Enable Pyramid scheme invites"
     },
+    "TwitchChannel": {
+      "Menu": 0,
+      "Value": "",
+      "UIDisplayText": "Twitch channel to connect to"
+    },
+    "TwitchBotLogin": {
+      "Menu": 0,
+      "Value": "",
+      "UIDisplayText": "Twitch bot account (optional)"
+    },
+    "TwitchClientId": {
+      "Menu": 0,
+      "Value": "",
+      "UIDisplayText": "Twitch app Client ID (Public client)"
+    },
     "API_MODE": {
       "Menu": 5,
       "Value": "PUBLIC",

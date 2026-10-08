@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "com.cfomodz.livechat": "https://github.com/Cfomodz/unity-livechat.git#v0.1.0",
+    "com.cfomodz.livechat": "https://github.com/Cfomodz/unity-livechat.git#v0.3.0",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.collab-proxy": "2.13.6",
     "com.unity.feature.development": "1.0.2",
