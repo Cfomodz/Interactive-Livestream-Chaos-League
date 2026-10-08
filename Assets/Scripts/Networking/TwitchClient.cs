@@ -93,8 +93,6 @@ public class TwitchClient : MonoBehaviour
 
         StartCoroutine(HandleMessage(messageId, twitchId, twitchUsername, usernameColor, rawMsg, emotes, isSubscriber, isFirstMessage, bits, isAdmin));
 
-        Debug.Log(JsonConvert.SerializeObject(message, Formatting.Indented));
-
         //If the message is a hype chat, give them the multiplier zone
         //e.ChatMessage.user
         Debug.Log($"Message received from {message.Username}: {message.RawMessage}   id: {message.MessageId} total bits: {message.Bits} isAdmin: {isAdmin}");
