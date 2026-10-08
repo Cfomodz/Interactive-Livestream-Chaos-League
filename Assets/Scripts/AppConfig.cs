@@ -10,10 +10,9 @@ using Unity.VisualScripting;
 using UnityEngine;
 
 // Load Balancer        http://chaosbotlb-1365055632.us-east-2.elb.amazonaws.com/
-// LocalHost            http://*
+// LocalHost            http://localhost
 // LocalHostPort        3001
 // LOCAL_PC_KEY         Bc2mMWjXCT2v83d3
-// Path_TO_NGROK_EXE    ./ngrok-v3-stable-windows-amd64/ngrok
 
 //                     0        1       2       3         4           5        6
 public enum UIMenu { Connect, Audio, Extras, GamePlay, Networking, Youtube, Advanced }
@@ -73,34 +72,6 @@ public class AppConfig
     public static int RareMult = 2;
     public static int EpicMult = 10;
     public static int LegendaryMult = 40; 
-
-    public static bool IsPublicBuild()
-    {
-        string API_MODE = inst.GetS("API_MODE");
-        if (API_MODE == "PUBLIC")
-            return true;
-        else
-            return false;
-    }
-    public static string GetClientID()
-    {
-        string API_MODE = inst.GetS("API_MODE");
-        if (API_MODE == "STAGING")
-            return inst.GetS("CLIENT_ID_STAGING");
-        else if (API_MODE == "PRIVATE")
-            return inst.GetS("CLIENT_ID_PRIVATE");
-        else //PUBLIC
-            return inst.GetS("CLIENT_ID_PUBLIC"); 
-    }
-
-    public static string GetClientSecret()
-    {
-        string API_MODE = inst.GetS("API_MODE");
-        if (API_MODE == "STAGING")
-            return inst.GetS("CLIENT_SECRET_STAGING");
-        else //(API_MODE == "PRIVATE")
-            return inst.GetS("CLIENT_SECRET_PRIVATE");
-    }
 
 
     public static int GetMult(RarityType rarity)

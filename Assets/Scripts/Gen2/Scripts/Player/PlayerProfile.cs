@@ -20,6 +20,10 @@ public class PlayerProfile
 
     public string TwitchUsername { get; set; }
     public string InvitedByID { get; set; }
+
+    /// <summary>The day (yyyy-MM-dd) RoundsJoinedToday counts, for the invite reminders.</summary>
+    public string RoundsJoinedDate { get; set; }
+    public int RoundsJoinedToday { get; set; }
     public string InvitesJSON { get; set; }
 
     public bool IsSubscriber { get; set; }

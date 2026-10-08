@@ -294,6 +294,7 @@ public class BidHandler : MonoBehaviour
 
             _biddingQ.Remove(ph);
             ph.SetState(PlayerHandlerState.Gameplay);
+            ph.CountRoundJoined();
 
             //Update Total Raffle Tickets
             UpdateBiddingQ();
@@ -344,6 +345,7 @@ public class BidHandler : MonoBehaviour
 
             _biddingQ.Remove(ph);
             ph.SetState(PlayerHandlerState.Gameplay);
+            ph.CountRoundJoined();
         }
 
         //Initialize and start running the tile based on the player count coming

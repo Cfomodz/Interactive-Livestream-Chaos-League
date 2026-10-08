@@ -646,7 +646,7 @@ public class PlayerHandler : MonoBehaviour, TravelingIndicatorIO, TI_Bid_IO
 
     private IEnumerator CheckBonusToInviter(long goldAmount)
     {
-        if (string.IsNullOrEmpty(pp.InvitedByID))
+        if (string.IsNullOrEmpty(pp.InvitedByID) || !AppConfig.inst.GetB("EnablePyramidSchemeInvites"))
             yield break;
 
         long bonus = goldAmount / 4;
@@ -694,53 +694,80 @@ public class PlayerHandler : MonoBehaviour, TravelingIndicatorIO, TI_Bid_IO
         FlaggedToUnload = true; 
     }
 
-    public IEnumerator SetInvitor(PlayerHandler inviter, TwitchClient twitchClient, InvitePromo invitePromo)
+    /// <summary>
+    /// Records who invited this player and gives them both the recruit reward. The first inviter
+    /// sticks: once set, it can't be changed.
+    /// </summary>
+    public IEnumerator SetInvitor(PlayerHandler inviter, TwitchClient twitchClient, InvitePromo invitePromo, string messageId = null)
     {
-        //If they were already invited, don't allow them to change it again this stream
-/*        if (!string.IsNullOrEmpty(pp.InvitedByID))
+        //Checked again here, with no yield before the inviter is set, so the first of two quick claims wins
+        if (!string.IsNullOrEmpty(pp.InvitedByID))
         {
-            //Debug.Log($"Player {pp.TwitchUsername} is already invited. Blocking inviterID {inviter.pp.TwitchUsername}");
-            twitchClient.PingReplyPlayer(pp.TwitchUsername, $"You can only be invited once per stream.");
+            yield return ReplyAlreadyInvited(messageId, twitchClient);
             yield break;
-        }*/
+        }
 
         if(string.Equals(pp.TwitchID, inviter.pp.TwitchID, StringComparison.OrdinalIgnoreCase))
         {
-            //Debug.Log($"Player {pp.TwitchUsername} is trying to invite themselves. Blocking inviterID: {inviter.pp.TwitchUsername}");
-            twitchClient.PingReplyPlayer(pp.TwitchUsername, $"You cannot invite yourself.");
+            twitchClient.ReplyToPlayer(messageId, pp.TwitchUsername, "You can't invite yourself.");
             yield break;
         }
 
-        //If you have invited somebody else, then you can't BE invited
-/*        if(pp.GetInviteIds().Length > 0)
-        {
-            //Debug.Log($"{pp.TwitchUsername} has already invited somebody else. So they can't be invited by {inviter.pp.TwitchUsername}");
-            twitchClient.PingReplyPlayer(pp.TwitchUsername, $"You have already invited someone else, so you can't be invited by @{inviter.pp.TwitchUsername}");
-            yield break;
-        }
-*/
-        //If this player handler was already active in the stream in the last hour
-        if(pp.LastInteraction != null && pp.LastInteraction > DateTime.Now.AddHours(-1))
-        {
-            TimeSpan timeDifference = DateTime.Now - pp.LastInteraction;
-            int secondsAgo = (int)timeDifference.TotalSeconds;
-
-            twitchClient.PingReplyPlayer(pp.TwitchUsername, $"Can't be invited by @{inviter.pp.TwitchUsername} since you're already active in the previous hour as of {secondsAgo} seconds ago.");
-            yield break;
-        }
-
-        //Debug.Log($"{inviter.pp.TwitchUsername} Successfully adding invite {pp.TwitchUsername}");
-        twitchClient.PingReplyPlayer(inviter.pp.TwitchUsername, $"You successfully invited @{pp.TwitchUsername} using your !invite link. You will now earn 25% of all gold they earn!");
-        inviter.pp.AddInvite(pp.TwitchID);
         pp.InvitedByID = inviter.pp.TwitchID;
+        inviter.pp.AddInvite(pp.TwitchID);
         pp.LastInteraction = DateTime.Now;
-        inviter.pp.LastInteraction = DateTime.Now; 
+        inviter.pp.LastInteraction = DateTime.Now;
+
+        long reward = Math.Max(0, AppConfig.inst.GetI("recruitPointReward"));
+        if (reward > 0)
+        {
+            AddPoints(reward, true, Vector3.up, contributeToROI: false);
+            inviter.AddPoints(reward, true, Vector3.up, contributeToROI: false);
+        }
+
+        string share = AppConfig.inst.GetB("EnablePyramidSchemeInvites") ? $" @{inviter.pp.TwitchUsername} also earns 25% of the gold you earn." : "";
+        twitchClient.ReplyToPlayer(messageId, pp.TwitchUsername, $"@{inviter.pp.TwitchUsername} is now your inviter, and you both earned {reward:N0} points!{share}");
 
         invitePromo.AnnounceNewInvite(inviter.pp.TwitchID, pp.TwitchID);
 
         if (pb != null)
-            yield return pb.UpdateInviterIndicator(); 
+            yield return pb.UpdateInviterIndicator();
 
+    }
+
+    public IEnumerator ReplyAlreadyInvited(string messageId, TwitchClient twitchClient)
+    {
+        CoroutineResult<PlayerHandler> coResult = new CoroutineResult<PlayerHandler>();
+        yield return _gm.GetPlayerHandler(pp.InvitedByID, coResult);
+        string inviterName = coResult.Result?.pp.TwitchUsername;
+        string by = string.IsNullOrEmpty(inviterName) ? "someone" : $"@{inviterName}";
+        twitchClient.ReplyToPlayer(messageId, pp.TwitchUsername, $"You were already invited by {by}, and that can't be changed.");
+    }
+
+    private const int InviteReminderEveryRounds = 10;
+    private const int InviteReminderRoundsPerDay = 30;
+
+    /// <summary>
+    /// Counts a round this player joined. Players with no inviter yet are reminded to name one every
+    /// 10th round they join, for their first 30 rounds each day.
+    /// </summary>
+    public void CountRoundJoined()
+    {
+        string today = DateTime.Now.ToString("yyyy-MM-dd");
+        if (pp.RoundsJoinedDate != today)
+        {
+            pp.RoundsJoinedDate = today;
+            pp.RoundsJoinedToday = 0;
+        }
+        pp.RoundsJoinedToday++;
+
+        if (!string.IsNullOrEmpty(pp.InvitedByID) || pp.TwitchID == Secrets.CHANNEL_ID)
+            return;
+        if (pp.RoundsJoinedToday > InviteReminderRoundsPerDay || pp.RoundsJoinedToday % InviteReminderEveryRounds != 0)
+            return;
+
+        long reward = Math.Max(0, AppConfig.inst.GetI("recruitPointReward"));
+        _gm.TwitchClient.PingReplyPlayer(pp.TwitchUsername, $"Who invited you to Chaos League? Type !invitedby @theirname and you'll both get {reward:N0} points.");
     }
 
 

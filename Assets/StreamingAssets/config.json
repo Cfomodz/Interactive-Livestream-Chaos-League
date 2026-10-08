@@ -27,7 +27,7 @@
     },
     "recruitPointReward": {
       "Menu": 3,
-      "Value": 1000,
+      "Value": 2000,
       "UIDisplayText": "Recruit Point Reward"
     },
     "enableNGROKConnection": {
@@ -43,7 +43,7 @@
     "popupMessages": {
       "Menu": 6,
       "Value": [
-        "Want quick points? Share the stream with friends and ask them to type your @username in chat. You'll both earn 25,000 points!"
+        "Want quick points? Share the stream with friends and ask them to type !invitedby @yourname in chat. You'll both earn 2,000 points!"
       ],
       "UIDisplayText": "Popup Messages"
     },
@@ -84,18 +84,13 @@
     },
     "HostToListenOn": {
       "Menu": 4,
-      "Value": "http://*",
+      "Value": "http://localhost",
       "UIDisplayText": "Host To Listen On"
     },
     "localHostPort": {
       "Menu": 4,
       "Value": 3001,
       "UIDisplayText": "Local Host Port"
-    },
-    "PATH_TO_NGROK_EXE": {
-      "Menu": 4,
-      "Value": "./ngrok-v3-stable-windows-amd64/ngrok.exe",
-      "UIDisplayText": "Path to NGROK EXE"
     },
     "LOCAL_PC_KEY": {
       "Menu": 4,
@@ -231,36 +226,6 @@
       "Menu": 0,
       "Value": "",
       "UIDisplayText": "Twitch app Client ID (Public client)"
-    },
-    "API_MODE": {
-      "Menu": 5,
-      "Value": "PUBLIC",
-      "UIDisplayText": "API_MODE (STAGING, PRIVATE, PUBLIC)"
-    },
-    "CLIENT_ID_PUBLIC": {
-      "Menu": 5,
-      "Value": "w9li5q2jab5t2oru0v0nt67n333j65",
-      "UIDisplayText": "CLIENT_ID_PUBLIC"
-    },
-    "CLIENT_ID_PRIVATE": {
-      "Menu": 5,
-      "Value": "jci8zdykq99u8ulwwc542czcfp947t",
-      "UIDisplayText": "CLIENT_ID_PRIVATE"
-    },
-    "CLIENT_ID_STAGING": {
-      "Menu": 5,
-      "Value": "y6395v1ftsncuuzd7gavsvgngporbm",
-      "UIDisplayText": "CLIENT_ID_STAGING"
-    },
-    "CLIENT_SECRET_PRIVATE": {
-      "Menu": 5,
-      "Value": "",
-      "UIDisplayText": "CLIENT_SECRET_PRIVATE"
-    },
-    "CLIENT_SECRET_STAGING": {
-      "Menu": 5,
-      "Value": "",
-      "UIDisplayText": "CLIENT_SECRET_STAGING"
     },
     "MinutesBetweenDBBackups": {
       "Menu": 5,

@@ -292,41 +292,61 @@ public class GameManager : MonoBehaviour
     }
 
 
-    public IEnumerator HandleInviteSignal(TwitchUser invitedUser, TwitchUser invitorUser)
+    public TwitchClient TwitchClient => _twitchClient;
+
+    /// <summary>
+    /// A player names who invited them (!invitedby @name in chat). The first claim sticks and can't be
+    /// changed. The inviter must have played before, and invites can't loop back to the player.
+    /// </summary>
+    public IEnumerator HandleInviteClaim(string messageId, PlayerHandler invitedPh, string inviterUsername)
     {
-        Debug.Log($"handling invite signal in game manager {invitedUser.Id} {invitorUser.Id}");
+        string invitedName = invitedPh.pp.TwitchUsername;
+        inviterUsername = inviterUsername?.Trim().TrimStart('@');
 
-        //Get the player handler for the invited ph
+        if (!string.IsNullOrEmpty(invitedPh.pp.InvitedByID))
+        {
+            yield return invitedPh.ReplyAlreadyInvited(messageId, _twitchClient);
+            yield break;
+        }
+
+        if (string.IsNullOrEmpty(inviterUsername))
+        {
+            _twitchClient.ReplyToPlayer(messageId, invitedName, "Who invited you? Correct format is: !invitedby @username");
+            yield break;
+        }
+
         CoroutineResult<PlayerHandler> coResult = new CoroutineResult<PlayerHandler>();
-        yield return GetPlayerHandler(invitedUser.Id, coResult);
-        PlayerHandler invitedPh = coResult.Result;
+        yield return GetPlayerByUsername(inviterUsername, coResult);
+        PlayerHandler inviterPh = coResult.Result;
 
-        if(invitedPh == null)
+        //Looking a name up creates a profile, so "has played" means some activity was recorded, not just being in the database
+        if (inviterPh == null || inviterPh.pp.LastInteraction == default)
         {
-            Debug.LogError($"Failed to handle invite signal. invitedPh is null for invited: {invitedUser.Login} and invitor: {invitorUser.Login}");
+            _twitchClient.ReplyToPlayer(messageId, invitedName, $"@{inviterUsername} hasn't played Chaos League yet, so they can't be your inviter.");
             yield break;
         }
-        invitedPh.pp.TwitchUsername = invitedUser.Login;
-        yield return invitedPh.LoadBallPfp();  //Important, this depends on the twitch username being set before it can load the pfp
 
-
-
-
-        coResult.Reset();
-        yield return GetPlayerHandler(invitorUser.Id, coResult);
-        PlayerHandler invitorPh = coResult.Result;
-
-        if (invitorPh == null)
+        if (inviterPh.pp.TwitchID == invitedPh.pp.TwitchID)
         {
-            Debug.LogError($"Failed to handle invite signal. invitorPh is null for invited: {invitedUser.Login} and invitor: {invitorUser.Login}");
+            _twitchClient.ReplyToPlayer(messageId, invitedName, "You can't invite yourself.");
             yield break;
         }
-        invitorPh.pp.TwitchUsername = invitorUser.Login;
-        yield return invitorPh.LoadBallPfp();  //Important, this depends on the twitch username being set before it can load the pfp
 
-        yield return invitedPh.SetInvitor(invitorPh, _twitchClient, _invitePromo);
+        //Walk up the inviter's chain: if it reaches this player, the invite would make a loop
+        string chainId = inviterPh.pp.InvitedByID;
+        for (int hops = 0; hops < 50 && !string.IsNullOrEmpty(chainId); hops++)
+        {
+            if (chainId == invitedPh.pp.TwitchID)
+            {
+                _twitchClient.ReplyToPlayer(messageId, invitedName, $"@{inviterPh.pp.TwitchUsername} joined through your invites, so they can't be your inviter.");
+                yield break;
+            }
+            coResult.Reset();
+            yield return GetPlayerHandler(chainId, coResult);
+            chainId = coResult.Result?.pp.InvitedByID;
+        }
 
-
+        yield return invitedPh.SetInvitor(inviterPh, _twitchClient, _invitePromo, messageId);
     }
 
     public KingController GetKingController()

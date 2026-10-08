@@ -6292,53 +6292,6 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!1 &465324811
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 465324812}
-  - component: {fileID: 465324813}
-  m_Layer: 0
-  m_Name: AutoNgrokService
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &465324812
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 465324811}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1428205192}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &465324813
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 465324811}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d56736a1db1020849bbaf774c5bdba43, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  restartTunnelButton: 0
-  logAllOuputs: 1
-  killTunnelsButton: 0
 --- !u!1 &481457710
 GameObject:
   m_ObjectHideFlags: 0
@@ -22324,7 +22277,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 550380674}
-  - {fileID: 465324812}
   - {fileID: 943938166}
   - {fileID: 1081751821}
   - {fileID: 719420100}
@@ -28558,7 +28510,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d1385ac9804274458fcecb0dddd0602, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _autoNgrokService: {fileID: 465324813}
   _gameManager: {fileID: 1428205193}
   _twitchApi: {fileID: 1081751822}
   _spotifyDJ: {fileID: 4983788102390571504}

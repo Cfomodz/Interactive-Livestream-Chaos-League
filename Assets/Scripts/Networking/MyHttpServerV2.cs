@@ -18,10 +18,10 @@ using System.Net.Sockets;
 using System.Collections;
 using TMPro;
 
+// Local-only web server for OAuth callbacks that come back to this PC's browser (Spotify).
+// Nothing here needs to be reachable from the internet.
 public class MyHttpServerV2 : MonoBehaviour
 {
-    [SerializeField] private AutoNgrokService _autoNgrokService;
-
     [SerializeField] private GameManager _gameManager;
     [SerializeField] private TwitchApi _twitchApi;
     [SerializeField] private SpotifyDJ _spotifyDJ;
@@ -38,19 +38,13 @@ public class MyHttpServerV2 : MonoBehaviour
         StartCoroutine(CRestartListener()); 
     }
 
-    //The port will stay listening while the ngrok tunnel is running. To restart the httpserver, I must shut off and restart the ngrok tunnel as well
     public IEnumerator CRestartListener()
     {
-        _autoNgrokService.KillAllNgrokProcesses();
-        yield return new WaitForSeconds(1);
-
         StopListener();
         // Introduce a brief delay to allow socket resources to release
-        yield return new WaitForSeconds(1); 
+        yield return new WaitForSeconds(1);
 
         StartListener();
-        yield return new WaitForSeconds(1);
-        _autoNgrokService.StartNgrokTunnel();
     }
 
     public void StopListener()
@@ -116,7 +110,6 @@ public class MyHttpServerV2 : MonoBehaviour
             response.ContentType = "text/html; charset=UTF-8";
             response.Headers.Add("Access-Control-Allow-Origin: *");
             response.Headers.Add("Access-Control-Allow-Methods: GET,POST");
-            response.Headers.Add("ngrok-skip-browser-warning", "69420");
             response.OutputStream.Write(responseData, 0, responseData.Length);
             response.OutputStream.Close();
         }
@@ -174,89 +167,7 @@ public class MyHttpServerV2 : MonoBehaviour
         }
         Debug.Log(output.ToString());
 
-        if (request.Url.LocalPath.Contains('@')) // Receive NGROK signal /TODO: Change this path to specify [/updatePlayerFromDB]
-        {
-            string username = request.Url.LocalPath.Substring(request.Url.LocalPath.IndexOf('@'));
-            username = username.Replace("@", "");
-            Debug.Log("Found test username: " + username);
-
-            // If we made it all the way here, SUCCESS
-            return Encoding.UTF8.GetBytes(
-                        //   $"<h1>Success Clicking Referal Link. Going to Oauth now!</h1>" +
-                        //   $"<p>The following usernames were found and linked to your Chaos League profile. </p> " +
-                        //   $"<p>When you chat in the livestream with those accounts, your actions will still be linked to your Chaos League profile. </p>" +
-                        $"<head>" +
-                        $"<meta http-equiv=\"refresh\" content=\"0;URL={_twitchApi.GetOauthURLforInvite(username)}\">" +
-                        $"</head>" //+
-                                    //  $"<body>" +
-                                    //    $"<h2>Redirecting...</h1>" +
-                                    //    $"<p>You will be redirected to a different page in 4 seconds.</p>" +
-                                    //  $"</body>"
-                        );
-
-        }
-        if (request.Url.LocalPath == "/invited")
-        {
-            try
-            {
-                string code = request.QueryString.Get("code");
-                string referrer = request.QueryString.Get("state");
-                Debug.Log($"starting invite with code: [{code}] and referrer: [{referrer}]");
-
-                //If the name of the referrer was not passed through correctly, just redirect them
-                if (string.IsNullOrEmpty(referrer))
-                {
-                    Debug.Log("Referrer name not found"); 
-                    return Encoding.UTF8.GetBytes(
-
-                            $"<head>" +
-                            $"<p> Referrer name not found </p>" + 
-                            $"<meta http-equiv=\"refresh\" content=\"0;URL=https://www.twitch.tv/{Secrets.CHANNEL_NAME}\">" +
-                            $"</head>" //+
-
-                        );
-                }
-
-                var invitedUser = await TwitchApi.TradeAuthCodeForUser(code);
-
-                Debug.Log("invited user: " + invitedUser.Login);
-                var referrerUser = await TwitchApi.GetUserByUsername(referrer);
-
-                if (referrerUser != null)
-                {
-                    Debug.Log("referrerUser user: " + referrerUser.Login);
-
-                    //Need to pass this userID
-                    UnityMainThreadDispatcher.Instance().Enqueue(() => StartCoroutine(_gameManager.HandleInviteSignal(invitedUser, referrerUser)));
-                    // If we made it all the way here, SUCCESS
-                    return Encoding.UTF8.GetBytes(
-
-                                $"<head>" +
-                                $"<meta http-equiv=\"refresh\" content=\"0;URL=https://www.twitch.tv/{Secrets.CHANNEL_NAME}\">" +
-                                $"</head>" //+
-
-                                );
-                }
-
-                // Show quick tiny message that they failed to find the referring user, then redirect them to the stream
-                return Encoding.UTF8.GetBytes(
-
-                            $"<head>" +
-                            $"<p>Failed to find referring user: [{referrer}]</p>" +
-                            $"<meta http-equiv=\"refresh\" content=\"0;URL=https://www.twitch.tv/{Secrets.CHANNEL_NAME}\">" +
-                            $"</head>" //+
-
-                            );
-                
-            }
-            catch (Exception e)
-            {
-                Debug.Log("Caught error in httpserver invite: " + e.Message);
-            }
-
-        }
-
-        if (request.Url.LocalPath == "/spotifyToken") // Receive NGROK signal /TODO: Change this path to specify [/updatePlayerFromDB]
+        if (request.Url.LocalPath == "/spotifyToken")
         {
             if (!request.IsLocal)
                 return UnauthorisedResponse();

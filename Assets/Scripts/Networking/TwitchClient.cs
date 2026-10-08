@@ -7,6 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -91,9 +92,6 @@ public class TwitchClient : MonoBehaviour
 
     public IEnumerator HandleMessage(string messageId, string twitchId, string twitchUsername, Color usernameColor, string rawMsg, List<LiveChatEmote> emotes, bool isSubscriber, bool isFirstMessage, int bits, bool isAdmin)
     {
-
-        //Debug.LogError($"Handling message from: API_MODE: {AppConfig.inst.GetS("API_MODE")} ClientID: {AppConfig.GetClientID()} ClientSecret: {AppConfig.GetClientSecret()}");
-
         bool isMe = twitchId == Secrets.CHANNEL_ID;
         string sanitizedMsg = rawMsg.Replace("<", "").Replace(">", "");
 
@@ -125,11 +123,17 @@ public class TwitchClient : MonoBehaviour
             yield break;
         }
 
-        if (ph.pp.IsNew)
+        bool newPlayer = ph.pp.IsNew;
+        if (newPlayer)
         {
             isFirstMessage = true;
             ph.pp.IsNew = false;
         }
+
+        //A new player's first message that is only "@username" names who invited them
+        Match inviterMention = Regex.Match(sanitizedMsg.Trim(), @"^@(\w{1,25})$");
+        if (newPlayer && inviterMention.Success)
+            StartCoroutine(_gm.HandleInviteClaim(messageId, ph, inviterMention.Groups[1].Value));
 
         ph.pp.LastInteraction = DateTime.Now;
         ph.pp.TwitchUsername = twitchUsername;
@@ -231,10 +235,23 @@ public class TwitchClient : MonoBehaviour
             return;
         }
 
+        //Before !invite, which "!invitedby" also starts with
+        else if (commandKey.StartsWith("!invitedby") || commandKey.StartsWith("!referredby"))
+        {
+            if (!MyUtil.GetUsernameFromString(msg, out string inviterUsername))
+            {
+                string[] parts = msg.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                inviterUsername = parts.Length > 1 ? parts[1] : null;
+            }
+            StartCoroutine(_gm.HandleInviteClaim(messageId, ph, inviterUsername));
+            return;
+        }
+
         else if (commandKey.StartsWith("!invite") || commandKey.StartsWith("!recruit") || commandKey.StartsWith("!pyramidscheme") || commandKey.StartsWith("!invitelink") || commandKey.StartsWith("!getinvitelink") || commandKey.StartsWith("!getreferrallink"))
-        {           
-            string url = $"{Secrets.CHAOS_LEAGUE_DOMAIN}/@{ph.pp.TwitchUsername}";
-            ReplyToPlayer(messageId, ph.pp.TwitchUsername, $"Share to start your pyramid scheme. Every player that joins the stream with your invite link earns you 25% of the gold they earn (yes it compounds)! \n{url}");
+        {
+            long reward = Math.Max(0, AppConfig.inst.GetI("recruitPointReward"));
+            string share = AppConfig.inst.GetB("EnablePyramidSchemeInvites") ? ", and you'll earn 25% of the gold they earn (yes it compounds)" : "";
+            ReplyToPlayer(messageId, ph.pp.TwitchUsername, $"Invite your friends! When they join, have them type !invitedby @{ph.pp.TwitchUsername} in chat. You'll both get {reward:N0} points{share}!");
             return;
         }
         else if (commandKey.StartsWith("!coinflip") || commandKey.StartsWith("!flipcoin"))

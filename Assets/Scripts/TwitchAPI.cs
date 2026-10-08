@@ -1,12 +1,7 @@
 using LiveChat;
 using LiveChat.Twitch;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -259,64 +254,5 @@ public class TwitchApi : MonoBehaviour
         {
             Debug.Log("Failed to cancel open predictions. \n" + ex.Message);
         }
-    }
-
-    // Invites use their own Twitch app (CLIENT_ID_* and CLIENT_SECRET_* in config): the invited viewer
-    // logs in through the tunnel, which needs the authorization code flow and so a client secret.
-
-    public string GetOauthURLforInvite(string username)
-    {
-        string redirect_uri = $"https://{Secrets.TUNNEL_DOMAIN}/invited";
-        string authURL = $"https://id.twitch.tv/oauth2/authorize?response_type=code&client_id={AppConfig.GetClientID()}&redirect_uri={redirect_uri}&state={username}";
-        Debug.Log("OauthURL: " + authURL);
-        return authURL;
-    }
-
-    public static async Task<TwitchUser> TradeAuthCodeForUser(string code)
-    {
-        var httpClient = new HttpClient();
-        string redirectURI = "http://localhost:3001/receiveBotAuthCode";
-
-        var request = new HttpRequestMessage(HttpMethod.Post, "https://id.twitch.tv/oauth2/token");
-        request.Content = new StringContent($"client_id={AppConfig.GetClientID()}&client_secret={AppConfig.GetClientSecret()}&code={code}&grant_type=authorization_code&redirect_uri={redirectURI}", Encoding.UTF8, "application/x-www-form-urlencoded");
-
-        try
-        {
-            var response = await httpClient.SendAsync(request);
-            response.EnsureSuccessStatusCode();
-
-            var responseBody = await response.Content.ReadAsStringAsync();
-
-            TwitchTokenResponse twitchTokenResponse = JsonConvert.DeserializeObject<TwitchTokenResponse>(responseBody);
-
-            if (twitchTokenResponse == null)
-            {
-                Debug.Log("ERROR: twitch token response is null when trying to trade auth code for user in TwitchAPI");
-                return null;
-            }
-
-            return await GetUserByToken(httpClient, twitchTokenResponse.AccessToken);
-        }
-        catch (Exception e)
-        {
-            Debug.Log($"ERROR. Caught exception in TwitchAPI. Trying to trade invite auth code {code} for user. Exception: {e}");
-            return null;
-        }
-    }
-
-    private static async Task<TwitchUser> GetUserByToken(HttpClient httpClient, string accessToken)
-    {
-        var request = new HttpRequestMessage(HttpMethod.Get, TwitchHelix.BaseUrl + "users");
-        request.Headers.TryAddWithoutValidation("Client-Id", AppConfig.GetClientID());
-        request.Headers.TryAddWithoutValidation("Authorization", "Bearer " + accessToken);
-
-        var response = await httpClient.SendAsync(request);
-        response.EnsureSuccessStatusCode();
-
-        JObject json = JObject.Parse(await response.Content.ReadAsStringAsync());
-        TwitchUser user = TwitchHelix.UserFrom(json["data"]?.FirstOrDefault());
-        if (user == null)
-            Debug.LogError("Failed to find user from invite token");
-        return user;
     }
 }

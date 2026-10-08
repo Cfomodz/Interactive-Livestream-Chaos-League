@@ -113,19 +113,6 @@ public class ProjectBuilder : EditorWindow
             AppConfig.inst.SetV("Send_Error_Webhooks", false);
             AppConfig.inst.SetV("Send_Donation_Webhooks", false);
 
-            //Disable invites
-            AppConfig.inst.SetV("EnablePyramidSchemeInvites", false);
-
-            AppConfig.inst.SetV("API_MODE", "PUBLIC");
-
-            //Optional, remove client ids 
-            AppConfig.inst.SetV("CLIENT_ID_PRIVATE", "");
-            AppConfig.inst.SetV("CLIENT_ID_STAGING", "");
-
-            //Delete Client Secret
-            AppConfig.inst.SetV("CLIENT_SECRET_PRIVATE", "");
-            AppConfig.inst.SetV("CLIENT_SECRET_STAGING", "");
-
             //Delete the database backups folder and database
             string backupsFolderPath = Path.Combine(buildFolderPath, $"{ProjectName}_Data", "StreamingAssets", "DatabaseBackups");
             // Delete the backups folder if it exists
@@ -150,12 +137,7 @@ public class ProjectBuilder : EditorWindow
                 Debug.Log("Deleted secrets.env file");
             }
             else
-                Debug.LogError("FAILED TO DELETE SECRETS.ENV"); 
-
-        }
-        else
-        {
-            AppConfig.inst.SetV("API_MODE", "PRIVATE");
+                Debug.LogError("FAILED TO DELETE SECRETS.ENV");
 
         }
 
