@@ -42,16 +42,22 @@
       "UIDisplayText": "Link for !patreon (empty = no reply)",
       "Personal": true
     },
-    "AWS_ACCESS_KEY": {
-      "Menu": 4,
-      "Value": "",
-      "UIDisplayText": "AWS Access Key",
+    "TtsAnnouncerVoice": {
+      "Menu": 1,
+      "Value": "en_US-joe-medium",
+      "UIDisplayText": "Text to speech voice for announcements: a Piper voice in StreamingAssets/Piper/voices, or an installed Windows voice",
       "Personal": true
     },
-    "AWS_SECRET_KEY": {
-      "Menu": 4,
-      "Value": "",
-      "UIDisplayText": "AWS Secret Key",
+    "TtsPlayerVoice": {
+      "Menu": 1,
+      "Value": "en_US-libritts_r-medium",
+      "UIDisplayText": "Text to speech voice for players' chat (a multi-speaker Piper voice gives each player their own)",
+      "Personal": true
+    },
+    "TtsRate": {
+      "Menu": 1,
+      "Value": 0,
+      "UIDisplayText": "Text to speech speed (-10 to 10)",
       "Personal": true
     },
     "ERROR_WEBHOOK_URL": {
@@ -76,11 +82,6 @@
       "Menu": 3,
       "Value": "Redeem tickets (channel points) to play!",
       "UIDisplayText": "Main Instructions Text"
-    },
-    "defaultVoiceID": {
-      "Menu": 5,
-      "Value": "Joey",
-      "UIDisplayText": "Default Voice ID"
     },
     "enableTTS": {
       "Menu": 3,

@@ -86,3 +86,7 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/PlayerProfiles.db*
 /[Aa]ssets/[Ss]treamingAssets/DatabaseBackups*
 /[Aa]ssets/[Ss]treamingAssets/spriteTexturePackerGen.txt*
+
+# Piper text to speech (downloaded by Tools/get-piper.ps1)
+/[Aa]ssets/[Ss]treamingAssets/[Pp]iper/
+/[Aa]ssets/[Ss]treamingAssets/[Pp]iper.meta

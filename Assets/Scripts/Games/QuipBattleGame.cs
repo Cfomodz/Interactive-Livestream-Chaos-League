@@ -239,7 +239,7 @@ public class QuipBattleGame : Game
         if (msg.StartsWith("!"))
             return;
 
-        MyTTS.inst.SpeechMaster(rawEmotesRemoved, Amazon.Polly.VoiceId.Joey, MyTTS.AudioPitch.High, false);
+        MyTTS.inst.SpeechMaster(rawEmotesRemoved, MyTTS.TtsVoice.Player, MyTTS.AudioPitch.High, false, ph.pp.TwitchID);
     }
 
     public override void CleanUpGame()

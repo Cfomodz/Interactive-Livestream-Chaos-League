@@ -1,5 +1,4 @@
 ﻿
-using Amazon.Runtime.Internal.Endpoints.StandardLibrary;
 using LiveChat.Twitch;
 using System;
 using System.Collections;

@@ -68,6 +68,18 @@ defaults in `Assets/StreamingAssets/config.sample.json`. The same folder holds t
 database, its backups, the emote cache and the Twitch logins. It's outside the repo and the build
 folder, so commits can't include it and rebuilds can't overwrite it.
 
+### Text to speech
+
+Announcements and the king's chat are read aloud, fully offline. Run
+`powershell -ExecutionPolicy Bypass -File Tools/get-piper.ps1` once to download
+[Piper](https://github.com/rhasspy/piper) and the default voices (about 155 MB) into
+`Assets/StreamingAssets/Piper`. Without it the game falls back to the voices built into Windows.
+
+`TtsAnnouncerVoice` and `TtsPlayerVoice` in your config pick the voices (a Piper voice name or an
+installed Windows voice), `TtsRate` the speed, and `enableTTS` / `enableKingTTS` turn it off. The
+default player voice has 904 speakers, and each player always gets the same one. Before adding
+other Piper voices, check their MODEL_CARD: some are licensed for non-commercial use only.
+
 ### Music
 
 Put mp3, ogg or wav files in `Assets/StreamingAssets/Music` (or set `MusicFolder` in your config).
@@ -77,5 +89,14 @@ music you're licensed to play on stream; see the README in that folder.
 ## License
 
 This project is available under the [GNU General Public License v3.0](./LICENSE).
+
+### Credits
+
+- Text to speech: [Piper](https://github.com/rhasspy/piper) (MIT), which includes
+  [espeak-ng](https://github.com/espeak-ng/espeak-ng) (GPL-3.0).
+- Announcer voice: Piper `en_US-joe-medium`, from
+  [OHF-Voice/voice-datasets](https://github.com/OHF-Voice/voice-datasets) (CC0).
+- Player voices: Piper `en_US-libritts_r-medium`, trained on
+  [LibriTTS-R](http://www.openslr.org/141/) by Koizumi et al. (CC BY 4.0).
 
 [DoodleChaos]: https://www.youtube.com/@DoodleChaos

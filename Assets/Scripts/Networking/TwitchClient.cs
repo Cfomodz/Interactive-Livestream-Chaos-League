@@ -1,4 +1,3 @@
-using Amazon.Runtime.Internal.Endpoints.StandardLibrary;
 using LiveChat;
 using LiveChat.Twitch;
 using Newtonsoft.Json;
@@ -158,7 +157,7 @@ public class TwitchClient : MonoBehaviour
             ph.SpeechBubble(spriteInfusedMsg);
             if (ph.IsKing())
             {
-                MyTTS.inst.PlayerSpeech(rawEmotesRemoved, Amazon.Polly.VoiceId.Joey);
+                MyTTS.inst.PlayerSpeech(rawEmotesRemoved, MyTTS.TtsVoice.Player, ph.pp.TwitchID);
                 if (rawEmotesRemoved.ToLower().Contains("zobm"))
                     _autoPredictions.KingWordSignal(); 
             }
