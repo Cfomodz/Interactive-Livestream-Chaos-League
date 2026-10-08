@@ -59,7 +59,7 @@ public class DefaultDefenseV2 : MonoBehaviour
                 DefenseBrick db = newBrick.GetComponent<DefenseBrick>();
                 _defaultDefenseBricks[col, row] = db;
 
-                db.Rb2D.isKinematic = true;
+                db.Rb2D.bodyType = RigidbodyType2D.Kinematic;
 
 
                 newBrick.transform.localScale = new Vector3(cellSize.x * _cellMargin, cellSize.y * _cellMargin, cellSize.z);

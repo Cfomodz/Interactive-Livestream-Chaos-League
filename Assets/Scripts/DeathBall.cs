@@ -25,7 +25,7 @@ public class DeathBall : MonoBehaviour
         _retractedDuration = retractedDuration;
         _retractedWait = new WaitForSeconds(retractedDuration);
         _spikeCircle.enabled = true;
-        _rb.isKinematic = false;
+        _rb.bodyType = RigidbodyType2D.Dynamic;
 
         _matPropBlock = new MaterialPropertyBlock();
         _matPropBlock.SetFloat("_FillAmount", 1);
@@ -50,10 +50,10 @@ public class DeathBall : MonoBehaviour
         //Play spike retract sfx
         AudioController.inst.PlaySound(AudioController.inst.SpikesRetract, 0.95f, 1.05f);
 
-        _rb.isKinematic = true;
+        _rb.bodyType = RigidbodyType2D.Kinematic;
 /*        _vel = _rb.velocity;
         _aVel = _rb.angularVelocity;*/
-        _rb.velocity = Vector3.zero;
+        _rb.linearVelocity = Vector3.zero;
         _rb.angularVelocity = 0; 
         float timer = 0; 
         while(timer <= _retractedDuration)
@@ -63,7 +63,7 @@ public class DeathBall : MonoBehaviour
             timer += Time.deltaTime; 
             yield return null;
         }
-        _rb.isKinematic = false;
+        _rb.bodyType = RigidbodyType2D.Dynamic;
 /*        _rb.velocity = _vel;
         _rb.angularVelocity = _aVel;*/
         //Play spike deploy sfx

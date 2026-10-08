@@ -49,7 +49,7 @@ public class ClickAndDragRB2D : MonoBehaviour
             if(rb != null)
             {
                 rb.simulated = true;
-                rb.velocity = Vector2.zero;
+                rb.linearVelocity = Vector2.zero;
                 rb = null; 
             }
         }

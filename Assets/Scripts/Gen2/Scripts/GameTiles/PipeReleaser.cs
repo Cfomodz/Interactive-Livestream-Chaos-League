@@ -83,7 +83,7 @@ public class PipeReleaser : PlayerReceiveable
     {
         AudioController.inst.PlaySound(AudioController.inst.ReleasePlayer, 0.85f, 1.15f);
         db._rb.transform.position = releasePos.position;
-        db._rb.velocity = transform.up * Random.Range(launchSpeedMin, launchSpeedMax) + (transform.right * Random.Range(-0.001f, 0.001f)); //Also adds a tiny amount of random side to side vel to avoid stacking
+        db._rb.linearVelocity = transform.up * Random.Range(launchSpeedMin, launchSpeedMax) + (transform.right * Random.Range(-0.001f, 0.001f)); //Also adds a tiny amount of random side to side vel to avoid stacking
         db._rb.gravityScale = gravityOnExit;
     }
 
@@ -104,7 +104,7 @@ public class PipeReleaser : PlayerReceiveable
         pb._rb2D.transform.position = releasePos.position; 
         //pb._rb2D.MovePosition(releasePos.position);
 
-        pb._rb2D.velocity = transform.up * Random.Range(launchSpeedMin, launchSpeedMax) + (transform.right * Random.Range(-0.001f, 0.001f)); //Also adds a tiny amount of random side to side vel to avoid stacking
+        pb._rb2D.linearVelocity = transform.up * Random.Range(launchSpeedMin, launchSpeedMax) + (transform.right * Random.Range(-0.001f, 0.001f)); //Also adds a tiny amount of random side to side vel to avoid stacking
         pb._rb2D.gravityScale = gravityOnExit;
 
         pb.Reactivate();

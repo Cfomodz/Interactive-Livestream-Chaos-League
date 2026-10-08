@@ -74,7 +74,7 @@ public class FluidSpawner : MonoBehaviour
     {
         lp.gameObject.SetActive(true);
         lp.transform.position = new Vector3(LavaReleasePosition.position.x, LavaReleasePosition.position.y, LavaReleasePosition.position.z);
-        lp.Rb2D.velocity = lavaSpawnVelocity; 
+        lp.Rb2D.linearVelocity = lavaSpawnVelocity; 
         lp.Rb2D.gravityScale = lavaGravity; 
     }
     public void ReturnFluidParticleToPool(FluidParticle lp)

@@ -34,9 +34,9 @@ public class SimonSaysGame : Game
         {
             var rb2D = ph.pb._rb2D;
             rb2D.gravityScale = 0;
-            rb2D.drag = 1f;
-            rb2D.angularDrag = 0.1f;
-            rb2D.velocity = Vector2.zero;
+            rb2D.linearDamping = 1f;
+            rb2D.angularDamping = 0.1f;
+            rb2D.linearVelocity = Vector2.zero;
             rb2D.angularVelocity = 0;
         }
 

@@ -23,7 +23,7 @@ public class FluidParticle : MonoBehaviour
         dbs = _dbs;
         Type = type;
 
-        Rb2D.drag = 0;
+        Rb2D.linearDamping = 0;
 
         if (type == FluidType.water)
         {
@@ -34,7 +34,7 @@ public class FluidParticle : MonoBehaviour
         {
             gameObject.name = "lavaParticle";
             _pbEffector.OverrideExplodeAudio = _lavaSizzleDeathSound;
-            Rb2D.drag = _lavaDrag;
+            Rb2D.linearDamping = _lavaDrag;
         }
 
         _meshRenderer.material.SetColor("_EmissionColor", color);

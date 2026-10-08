@@ -27,6 +27,7 @@ public class ChaosPlinko : Game, IObsSpawner
     ///private List<DeathBall> _activeDeathBalls = new List<DeathBall>(); 
 
     private Collider2D[] overlapResults = new Collider2D[20];
+    private ContactFilter2D _overlapFilter;
 
     //[SerializeField] private TextMeshPro _intervalText; 
     //[SerializeField] private float _doubleTimeInterval = 15;
@@ -37,6 +38,8 @@ public class ChaosPlinko : Game, IObsSpawner
     private void Awake()
     {
         _obstaclePool = new ObjectPool<ChaosObs>(PlayerObstacleFactory, TurnOnObstacle, TurnOffObstacle);
+        _overlapFilter = new ContactFilter2D { useTriggers = Physics2D.queriesHitTriggers };
+        _overlapFilter.SetLayerMask(_invalidOverlapLayers);
     }
 
     public ChaosObs PlayerObstacleFactory()
@@ -202,7 +205,7 @@ public class ChaosPlinko : Game, IObsSpawner
             Debug.DrawRay(pos, -Vector3.forward, Color.yellow, 10f);
             //Check for overlap with other obstacles
             // = Physics2D.OverlapCircleAll(pos, pegScale / 2, InvalidOverlapLayers);
-            int overlapCount = Physics2D.OverlapCircleNonAlloc(pos, objRadius, overlapResults, _invalidOverlapLayers);
+            int overlapCount = Physics2D.OverlapCircle(pos, objRadius, _overlapFilter, overlapResults);
             //debugCircleCenter = pos;
             //debugCircleRadius = pegScale / 2;
             if (overlapCount <= 0)

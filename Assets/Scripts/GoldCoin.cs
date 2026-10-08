@@ -28,7 +28,7 @@ public class GoldCoin : TravelingIndicator
         origin.z = zPlane; 
         _rb2D.transform.position = origin;
 
-        _rb2D.velocity = vel;
+        _rb2D.linearVelocity = vel;
         _mr.material.color = color;
 
         _timeAlive = 0; 
@@ -44,7 +44,7 @@ public class GoldCoin : TravelingIndicator
         }
 
         Vector2 direction = (Vector2)(Target.Get_TI_IO_Position() - _rb2D.transform.position).normalized;
-        _rb2D.drag = _dragOvertime.Evaluate(_timeAlive / _dragOvertime.keys.Last().time); 
+        _rb2D.linearDamping = _dragOvertime.Evaluate(_timeAlive / _dragOvertime.keys.Last().time); 
         _rb2D.AddForce(direction * _magnetStrengthOverTime.Evaluate(_timeAlive / _magnetStrengthOverTime.keys.Last().time));
 
         if (Vector2.Distance(_rb2D.transform.position, Target.Get_TI_IO_Position()) < 0.5f && _timeAlive >= 1)

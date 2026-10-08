@@ -84,9 +84,9 @@ public class PlayerBall : MonoBehaviour
 
         EnableKinematicMode(); 
 
-        _rb2D.drag = 0;
+        _rb2D.linearDamping = 0;
 
-        _rb2D.angularDrag = 0.05f; 
+        _rb2D.angularDamping = 0.05f; 
         _colorRing.enabled = true;
         LockSpeechBubbleAngle = false;
         LockedSpeechBubbleAngle = 0;
@@ -157,15 +157,15 @@ public class PlayerBall : MonoBehaviour
     public void EnableKinematicMode()
     {
         _rb2D.simulated = true; 
-        _rb2D.isKinematic = true;
-        _rb2D.velocity = Vector2.zero;
+        _rb2D.bodyType = RigidbodyType2D.Kinematic;
+        _rb2D.linearVelocity = Vector2.zero;
         _rb2D.angularVelocity = 0;
     }
 
     public void EnableDynamicPhysicsMode()
     {
         _rb2D.simulated = true;
-        _rb2D.isKinematic = false;
+        _rb2D.bodyType = RigidbodyType2D.Dynamic;
     }
 
     public void Update()
@@ -494,9 +494,9 @@ public class PlayerBall : MonoBehaviour
     private void UpdateFluidDrag()
     {
         if (OverlappingFluids.Count > 0)
-            _rb2D.drag = _dragInFluids;
+            _rb2D.linearDamping = _dragInFluids;
         else
-            _rb2D.drag = 0; 
+            _rb2D.linearDamping = 0; 
     }
 
     private void UpdateRingColor()

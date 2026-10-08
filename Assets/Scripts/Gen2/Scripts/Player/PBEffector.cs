@@ -265,7 +265,7 @@ public class PBEffector : MonoBehaviour, TravelingIndicatorIO
     public void DetectedPB(PlayerBall pb)
     {
         if(_zeroPlayerBallVelOnDetection)
-            pb._rb2D.velocity = Vector3.zero;
+            pb._rb2D.linearVelocity = Vector3.zero;
 
         if (!_infiniteDurability && CurrentHP <= 0)
             return;

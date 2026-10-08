@@ -43,7 +43,7 @@ public class PBDetector : MonoBehaviour
         PlayerBall pb = collision.transform.GetComponentInParent<PlayerBall>();
 
 
-        if(_ignoreKinematicPlayers && pb._rb2D.isKinematic)
+        if(_ignoreKinematicPlayers && pb._rb2D.bodyType == RigidbodyType2D.Kinematic)
         {
             Physics2D.IgnoreCollision(collision.collider, collision.otherCollider);
             return;
@@ -81,7 +81,7 @@ public class PBDetector : MonoBehaviour
         PlayerBall pb = collision.transform.GetComponentInParent<PlayerBall>();
 
 
-        if (_ignoreKinematicPlayers && pb._rb2D.isKinematic)
+        if (_ignoreKinematicPlayers && pb._rb2D.bodyType == RigidbodyType2D.Kinematic)
         {
             Physics2D.IgnoreCollision(collision.collider, collision.otherCollider);
             return;
@@ -118,7 +118,7 @@ public class PBDetector : MonoBehaviour
 
         PlayerBall pb = collision.transform.GetComponentInParent<PlayerBall>();
 
-        if (_ignoreKinematicPlayers && pb._rb2D.isKinematic)
+        if (_ignoreKinematicPlayers && pb._rb2D.bodyType == RigidbodyType2D.Kinematic)
         {
             Physics2D.IgnoreCollision(collision, _collider2D);
             return;
