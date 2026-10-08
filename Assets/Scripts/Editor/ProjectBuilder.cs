@@ -4,10 +4,22 @@ using UnityEngine;
 
 public class ProjectBuilder : EditorWindow
 {
-    private string PublicBuildPath = "E:/UnityBuilds/PublicBuilds";
-    private string PrivateBuildPath = "E:/UnityBuilds/PrivateBuilds";
+    // Builds go to the same place every time, so Windows keeps per-app settings for the exe
+    // (like its output device in the volume mixer): %USERPROFILE%\ChaosLeague\ChaosLeague.exe
+    private static readonly string DefaultPrivateBuildPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
+    private static readonly string DefaultPublicBuildPath = Path.Combine(DefaultPrivateBuildPath, "ChaosLeague-Public");
+    private const string DefaultProjectName = "ChaosLeague";
 
-    private string ProjectName = "defaultProjName"; 
+    private string PublicBuildPath = DefaultPublicBuildPath;
+    private string PrivateBuildPath = DefaultPrivateBuildPath;
+
+    private string ProjectName = DefaultProjectName;
+
+    /// <summary>Private build to the default folder, for command-line builds: -executeMethod ProjectBuilder.BuildPrivateDefault</summary>
+    public static void BuildPrivateDefault()
+    {
+        BuildProject(DefaultPrivateBuildPath, DefaultProjectName, isPublic: false);
+    }
 
     [MenuItem("Tools/Project Builder")]
     public static void ShowWindow()
@@ -49,12 +61,12 @@ public class ProjectBuilder : EditorWindow
 
         if (GUILayout.Button("Build Private"))
         {
-            BuildProject();
+            BuildProject(PrivateBuildPath, ProjectName, isPublic: false);
         }
 
         if (GUILayout.Button("Build Public"))
         {
-            BuildProject(isPublic: true);
+            BuildProject(PublicBuildPath, ProjectName, isPublic: true);
         }
 
         if (GUILayout.Button("view curr defaults"))
@@ -69,9 +81,9 @@ public class ProjectBuilder : EditorWindow
         }
     }
 
-    private void BuildProject(bool isPublic = false)
+    private static void BuildProject(string buildPath, string ProjectName, bool isPublic)
     {
-        string buildFolderPath = Path.Combine(isPublic ? PublicBuildPath : PrivateBuildPath, ProjectName);
+        string buildFolderPath = Path.Combine(buildPath, ProjectName);
 
         // Set options
         BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
