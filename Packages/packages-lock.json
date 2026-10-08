@@ -1,13 +1,13 @@
 {
   "dependencies": {
     "com.cfomodz.livechat": {
-      "version": "https://github.com/Cfomodz/unity-livechat.git#b9b80dcfd7a17e2845756e3ddbb30274d26810bc",
+      "version": "https://github.com/Cfomodz/unity-livechat.git#v0.4.0",
       "depth": 0,
       "source": "git",
       "dependencies": {
         "com.unity.nuget.newtonsoft-json": "3.2.1"
       },
-      "hash": "b9b80dcfd7a17e2845756e3ddbb30274d26810bc"
+      "hash": "de8f439e397d142fe50deedd79c8d33868ef3f9f"
     },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
