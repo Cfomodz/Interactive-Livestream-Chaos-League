@@ -12,4 +12,7 @@ public abstract class TravelingIndicator : MonoBehaviour
 
     public long value;
 
+    /// <summary>How many invite-bonus hops up the chain this gold has travelled (0 = earned directly).</summary>
+    public int ChainDepth;
+
 }

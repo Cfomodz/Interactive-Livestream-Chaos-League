@@ -44,6 +44,7 @@ public class TI_Text : TravelingIndicator
         value = _value;
         _isLob = isLob;
         TI_Type = ti_type;
+        ChainDepth = 0; //Pooled: the caller sets it after creating an invite bonus
 
         _lobTimer = 0;
         _text.SetText(_displayText);

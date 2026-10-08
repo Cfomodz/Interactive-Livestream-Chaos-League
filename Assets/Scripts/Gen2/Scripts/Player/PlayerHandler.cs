@@ -53,7 +53,14 @@ public class PlayerHandler : MonoBehaviour, TravelingIndicatorIO, TI_Bid_IO
     public long TilePointsROI = 0; 
 
     private float _receiveGoldTimer = 0;
-    private long _receiveGoldAccumulator = 0; 
+    private long _receiveGoldAccumulator = 0;
+    private int _receiveGoldChainDepth = 0;
+
+    //Each hop up the invite chain goes faster than the last: quicker hand-off, faster flight, higher pitch
+    private const float InviteBonusHoldSeconds = 1.5f;
+    private const float InviteBonusSpeedUpPerHop = 1.5f;
+    private const float InviteBonusBaseTravelSpeed = 0.1f;
+    private const float InviteBonusPitchStepPerHop = 0.12f;
 
     public IEnumerator CInitPlayerHandler(GameManager gm, string twitchID)
     {
@@ -218,8 +225,9 @@ public class PlayerHandler : MonoBehaviour, TravelingIndicatorIO, TI_Bid_IO
                 return;
             }
             //Send the invite bonus
-            StartCoroutine(CheckBonusToInviter(_receiveGoldAccumulator)); 
-            _receiveGoldAccumulator = 0; 
+            StartCoroutine(CheckBonusToInviter(_receiveGoldAccumulator, _receiveGoldChainDepth + 1));
+            _receiveGoldAccumulator = 0;
+            _receiveGoldChainDepth = 0;
         }
     }
 
@@ -433,22 +441,25 @@ public class PlayerHandler : MonoBehaviour, TravelingIndicatorIO, TI_Bid_IO
             TextPopupMaster.Inst.CreateTextPopup(Get_TI_IO_Position(), textPopupDirection, "-" + MyUtil.AbbreviateNum4Char(amount), Color.red);
 
     }
-    public void AddGold(int amount, bool createTextPopup, bool doInviteBonus)
+    /// <param name="chainDepth">Invite-bonus hops this gold has already travelled (0 = earned directly).</param>
+    public void AddGold(int amount, bool createTextPopup, bool doInviteBonus, int chainDepth = 0)
     {
         pp.Gold += amount;
 
-        //Handle the invite bonus of half gold in the Update loop
+        //Handle the invite bonus in the Update loop. The further down the chain, the sooner it's passed on
         if (doInviteBonus)
         {
             _receiveGoldAccumulator += amount;
-            _receiveGoldTimer = 1.5f;
+            _receiveGoldChainDepth = Math.Max(_receiveGoldChainDepth, chainDepth);
+            _receiveGoldTimer = Mathf.Max(0.1f, InviteBonusHoldSeconds / Mathf.Pow(InviteBonusSpeedUpPerHop, _receiveGoldChainDepth));
         }
 
 
         if (State == PlayerHandlerState.King)
             _gm.GetKingController().UpdateGoldText();
 
-        AudioController.inst.PlaySound(AudioController.inst.CollectGold, 0.95f, 1.05f); 
+        float pitch = 1f + Mathf.Min(chainDepth * InviteBonusPitchStepPerHop, 1.5f);
+        AudioController.inst.PlaySound(AudioController.inst.CollectGold, pitch - 0.05f, pitch + 0.05f);
         if (createTextPopup)
             TextPopupMaster.Inst.CreateTextPopup(Get_TI_IO_Position(), Vector3.up, "+" + MyUtil.AbbreviateNum4Char(amount), MyColors.Gold);
     }
@@ -581,7 +592,7 @@ public class PlayerHandler : MonoBehaviour, TravelingIndicatorIO, TI_Bid_IO
 
         if (TI.TI_Type == TI_Type.GiveGoldDoBonus)
         {
-            AddGold((int)TI.value, true, doInviteBonus: true);
+            AddGold((int)TI.value, true, doInviteBonus: true, chainDepth: TI.ChainDepth);
             return;
         }
 
@@ -644,14 +655,19 @@ public class PlayerHandler : MonoBehaviour, TravelingIndicatorIO, TI_Bid_IO
         TextPopupMaster.Inst.CreateTravelingIndicator($"Invite Bonus +{MyUtil.AbbreviateNum4Char(bonus)}", bonus, this, inviterPh, 0.1f, Color.cyan, inviterPh.PfpTexture); 
     }*/
 
-    private IEnumerator CheckBonusToInviter(long goldAmount)
+    /// <summary>
+    /// Passes 25% of gold received up to this player's inviter, as hop <paramref name="hop"/> of the chain.
+    /// Whole gold only: the chain stops once the bonus rounds down below 1, so loops (A invited B, B
+    /// invited A) always end.
+    /// </summary>
+    private IEnumerator CheckBonusToInviter(long goldAmount, int hop)
     {
         if (string.IsNullOrEmpty(pp.InvitedByID) || !AppConfig.inst.GetB("EnablePyramidSchemeInvites"))
             yield break;
 
         long bonus = goldAmount / 4;
 
-        if (bonus <= 0)
+        if (bonus < 1)
             yield break;
 
         //Get the inviter Ph
@@ -665,7 +681,9 @@ public class PlayerHandler : MonoBehaviour, TravelingIndicatorIO, TI_Bid_IO
             yield break;
         }
 
-        TextPopupMaster.Inst.CreateTravelingIndicator($"Invite Bonus +{MyUtil.AbbreviateNum4Char(bonus)}", bonus, this, inviterPh, 0.1f, MyColors.Gold, inviterPh.PfpTexture, TI_Type.GiveGoldDoBonus);
+        float speed = InviteBonusBaseTravelSpeed * Mathf.Pow(InviteBonusSpeedUpPerHop, hop - 1);
+        TravelingIndicator ti = TextPopupMaster.Inst.CreateTravelingIndicator($"Invite Bonus +{MyUtil.AbbreviateNum4Char(bonus)}", bonus, this, inviterPh, speed, MyColors.Gold, inviterPh.PfpTexture, TI_Type.GiveGoldDoBonus);
+        ti.ChainDepth = hop;
 
     }
 

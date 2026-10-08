@@ -87,20 +87,21 @@ public class TextPopupMaster : MonoBehaviour
         //_activeTexts.Add((0, startPos, targetPos, scale, tmp));
     }
 
-    public void CreateTravelingIndicator(string text, long value, TravelingIndicatorIO origin, TravelingIndicatorIO target, float speed, Color color, Texture avatarTex, TI_Type ti_type = TI_Type._Default)
+    public TI_Text CreateTravelingIndicator(string text, long value, TravelingIndicatorIO origin, TravelingIndicatorIO target, float speed, Color color, Texture avatarTex, TI_Type ti_type = TI_Type._Default)
     {
-        CreateTravelingIndicator(text, value, origin.Get_TI_IO_Position(), target, speed, defaultTI_Scale, color, avatarTex, false, ti_type);
+        return CreateTravelingIndicator(text, value, origin.Get_TI_IO_Position(), target, speed, defaultTI_Scale, color, avatarTex, false, ti_type);
     }
-    public void CreateTravelingIndicator(string text, long value, Vector3 origin, TravelingIndicatorIO target, float speed, Color color, Texture avatarTex, TI_Type ti_type = TI_Type._Default)
+    public TI_Text CreateTravelingIndicator(string text, long value, Vector3 origin, TravelingIndicatorIO target, float speed, Color color, Texture avatarTex, TI_Type ti_type = TI_Type._Default)
     {
-        CreateTravelingIndicator(text, value, origin, target, speed, defaultTI_Scale, color, avatarTex, false, ti_type);
+        return CreateTravelingIndicator(text, value, origin, target, speed, defaultTI_Scale, color, avatarTex, false, ti_type);
     }
 
-    public void CreateTravelingIndicator(string text, long value, Vector3 origin, TravelingIndicatorIO target, float speed, Vector3 scale, Color color, Texture avatarTex, bool isLob, TI_Type ti_type = TI_Type._Default)
+    public TI_Text CreateTravelingIndicator(string text, long value, Vector3 origin, TravelingIndicatorIO target, float speed, Vector3 scale, Color color, Texture avatarTex, bool isLob, TI_Type ti_type = TI_Type._Default)
     {
         TI_Text ti = _TITextPool.GetObject(); //GetPooledTIText();
         ti.transform.position = origin;
         ti.InitializeNewTI(this, origin, target, value, text, color, speed, defaultTI_Scale, avatarTex, isLob, ti_type);
+        return ti;
     }
 
     private PopupText PopupTextFactory()

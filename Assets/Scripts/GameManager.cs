@@ -296,7 +296,7 @@ public class GameManager : MonoBehaviour
 
     /// <summary>
     /// A player names who invited them (!invitedby @name in chat). The first claim sticks and can't be
-    /// changed. The inviter must have played before, and invites can't loop back to the player.
+    /// changed. Players can't invite themselves.
     /// </summary>
     public IEnumerator HandleInviteClaim(string messageId, PlayerHandler invitedPh, string inviterUsername)
     {
@@ -319,31 +319,18 @@ public class GameManager : MonoBehaviour
         yield return GetPlayerByUsername(inviterUsername, coResult);
         PlayerHandler inviterPh = coResult.Result;
 
-        //Looking a name up creates a profile, so "has played" means some activity was recorded, not just being in the database
-        if (inviterPh == null || inviterPh.pp.LastInteraction == default)
+        if (inviterPh == null)
         {
-            _twitchClient.ReplyToPlayer(messageId, invitedName, $"@{inviterUsername} hasn't played Chaos League yet, so they can't be your inviter.");
+            _twitchClient.ReplyToPlayer(messageId, invitedName, $"Couldn't find a Twitch user named @{inviterUsername}.");
             yield break;
         }
 
+        //Inviting yourself is the only thing not allowed. Loops (A invited B, B invited A) are fine:
+        //the gold share shrinks by 75% each hop and stops below 1
         if (inviterPh.pp.TwitchID == invitedPh.pp.TwitchID)
         {
             _twitchClient.ReplyToPlayer(messageId, invitedName, "You can't invite yourself.");
             yield break;
-        }
-
-        //Walk up the inviter's chain: if it reaches this player, the invite would make a loop
-        string chainId = inviterPh.pp.InvitedByID;
-        for (int hops = 0; hops < 50 && !string.IsNullOrEmpty(chainId); hops++)
-        {
-            if (chainId == invitedPh.pp.TwitchID)
-            {
-                _twitchClient.ReplyToPlayer(messageId, invitedName, $"@{inviterPh.pp.TwitchUsername} joined through your invites, so they can't be your inviter.");
-                yield break;
-            }
-            coResult.Reset();
-            yield return GetPlayerHandler(chainId, coResult);
-            chainId = coResult.Result?.pp.InvitedByID;
         }
 
         yield return invitedPh.SetInvitor(inviterPh, _twitchClient, _invitePromo, messageId);
