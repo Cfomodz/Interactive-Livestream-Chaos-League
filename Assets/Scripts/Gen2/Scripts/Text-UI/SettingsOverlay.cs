@@ -43,7 +43,7 @@ public class SettingsOverlay : MonoBehaviour
         Slider masterVolSlider = MasterVolumeSlider.GetComponentInChildren<Slider>();
         masterVolSlider.value = AppConfig.inst.volumes.ContainsKey("master") ? AppConfig.inst.volumes["master"] : 1;
         AudioListener.volume = masterVolSlider.value;
-        masterVolSlider.onValueChanged.AddListener((value) => { AudioListener.volume = value; AppConfig.inst.volumes["master"] = value; });
+        masterVolSlider.onValueChanged.AddListener((value) => { AudioListener.volume = value; AppConfig.inst.volumes["master"] = value; AppConfig.MarkDirty(); });
 
         _mainInstructionsText.SetText(AppConfig.inst.configData["mainInstructions"].Value.ToString());
 
@@ -186,7 +186,7 @@ public class SettingsOverlay : MonoBehaviour
             slider.value = volume;
 
             //Set the audio source volume, and change the config file volume whenever we move the slider
-            slider.onValueChanged.AddListener((value) => { audioSource.volume = value; AppConfig.inst.volumes[audioCauseName] = value; });
+            slider.onValueChanged.AddListener((value) => { audioSource.volume = value; AppConfig.inst.volumes[audioCauseName] = value; AppConfig.MarkDirty(); });
 
             audioSource.volume = volume;
         }

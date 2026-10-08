@@ -80,6 +80,22 @@ public class GameManager : MonoBehaviour
             _resourceUnloadTimer = 0;
             Resources.UnloadUnusedAssets();
         }
+
+        //Save settings changes soon after they're made, so closing the window doesn't lose them
+        if (AppConfig.IsDirty && Time.unscaledTime - _lastConfigSaveTime > ConfigSaveDelaySeconds)
+        {
+            _lastConfigSaveTime = Time.unscaledTime;
+            AppConfig.SaveUserConfig();
+        }
+    }
+
+    private const float ConfigSaveDelaySeconds = 2f;
+    private float _lastConfigSaveTime;
+
+    private void OnApplicationQuit()
+    {
+        if (AppConfig.IsDirty)
+            AppConfig.SaveUserConfig();
     }
 
     public IEnumerator CreateNewPlayerHandler(string twitchId)
@@ -190,17 +206,10 @@ public class GameManager : MonoBehaviour
 
     private void LoadAppConfig()
     {
-        string filePath = Path.Combine(Application.streamingAssetsPath, "config.json");
-        string fileContents = File.ReadAllText(filePath);
-
-        AppConfig.LoadFromJson(fileContents);
-
-
+        AppConfig.Load();
+        Debug.Log($"Your settings and player data are in {UserData.Folder}");
 
         //QuipBattlePrompts.LoadPrompts(promptsJSON);
-
-        string pathToEnv = Path.Combine(Application.streamingAssetsPath, "secrets.env");
-        AppConfig.LoadEnvironmentVariables(pathToEnv); 
 
         string communityPointSprite = Path.Combine(Application.streamingAssetsPath, "communityPointSprite.png");
 
@@ -355,9 +364,7 @@ public class GameManager : MonoBehaviour
     {
         yield return SaveAllPlayerProfilesToDB(); 
 
-        //Save the app config
-        string filePath = Path.Combine(Application.streamingAssetsPath, "config.json");
-        AppConfig.SaveConfigFile(filePath);
+        AppConfig.SaveUserConfig();
 
         SQLiteServiceAsync.CloseConnection(); 
 

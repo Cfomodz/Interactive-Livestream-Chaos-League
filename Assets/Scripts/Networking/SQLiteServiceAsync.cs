@@ -20,8 +20,8 @@ public class SQLiteServiceAsync : MonoBehaviour
 
     private void Awake()
     {
-        // Specify the path to your SQLite database file
-        string dbPath = Path.Combine(Application.streamingAssetsPath, $"{_tableName}.db");
+        // In the user data folder, so rebuilds and commits never touch player data
+        string dbPath = UserData.DatabasePath(_tableName);
 
         // Create a connection to the database
         dbConnection = new SQLiteAsyncConnection(dbPath);
@@ -76,7 +76,7 @@ public class SQLiteServiceAsync : MonoBehaviour
 
     private void BackupDB()
     {
-        string backupFolder = Path.Combine(Application.streamingAssetsPath, "DatabaseBackups");
+        string backupFolder = UserData.DatabaseBackupsFolder;
         if (!Directory.Exists(backupFolder))
             Directory.CreateDirectory(backupFolder);
 

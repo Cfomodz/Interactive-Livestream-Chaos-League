@@ -47,7 +47,8 @@ public class DynamicSpriteAsset : MonoBehaviour
 
     IEnumerator LoadSpriteSheetImage()
     {
-        string filePath = Path.Combine(Application.streamingAssetsPath, _dynamicSpriteSheetFileName);
+        //Your cached emotes, or the seed sheet shipped in StreamingAssets the first time
+        string filePath = File.Exists(UserData.EmoteSheetPath) ? UserData.EmoteSheetPath : Path.Combine(Application.streamingAssetsPath, _dynamicSpriteSheetFileName);
 
         using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture("file:///" + filePath))
         {
@@ -70,10 +71,11 @@ public class DynamicSpriteAsset : MonoBehaviour
 
     private void OnDestroy()
     {
+        //The sheet and the emote index map only make sense together, so they're saved together
         var texture = _dynamic_tmp_spriteAsset.spriteSheet as Texture2D;
-        string filePath = Path.Combine(Application.streamingAssetsPath, _dynamicSpriteSheetFileName);
-        File.WriteAllBytes(filePath, texture.EncodeToPNG());
-        Debug.Log("Saving dynamic sprite sheet to file."); 
+        File.WriteAllBytes(UserData.EmoteSheetPath, texture.EncodeToPNG());
+        AppConfig.SaveEmoteMap();
+        Debug.Log("Saving dynamic sprite sheet to file.");
     }
 
     private void OnValidate()
@@ -167,7 +169,7 @@ public class DynamicSpriteAsset : MonoBehaviour
 
         string json = JsonConvert.SerializeObject(spriteTexturePackerJSONRoot, Formatting.Indented);
 
-        File.WriteAllText(Path.Combine(Application.streamingAssetsPath, "spriteTexturePackerGen.txt"), json);
+        File.WriteAllText(Path.Combine(UserData.Folder, "spriteTexturePackerGen.txt"), json);
 
     }
 

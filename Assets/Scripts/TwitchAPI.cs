@@ -52,7 +52,7 @@ public class TwitchApi : MonoBehaviour
         string channel = AppConfig.inst.GetS("TwitchChannel");
         if (string.IsNullOrWhiteSpace(channel))
         {
-            Debug.LogError("Set TwitchChannel in StreamingAssets/config.json to the channel to connect to.");
+            Debug.LogError($"Set TwitchChannel (and TwitchClientId) in your config to connect to Twitch: {UserData.ConfigPath}");
             return;
         }
         _client.Connect(new LiveChatConnectConfig { ChannelName = channel });

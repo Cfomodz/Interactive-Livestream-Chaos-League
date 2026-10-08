@@ -74,5 +74,15 @@ crashlytics-build.properties
 # Environment variables
 *.env
 *.env.meta
-Assets/StreamingAssets/ngrok-v3-stable-windows-amd64/ngrok.exe
-Assets/StreamingAssets/ngrok-v3-stable-windows-amd64/ngrok.exe.meta
+
+# Music
+/[Aa]ssets/[Ss]treamingAssets/[Mm]usic/*.mp3*
+/[Aa]ssets/[Ss]treamingAssets/[Mm]usic/*.ogg*
+/[Aa]ssets/[Ss]treamingAssets/[Mm]usic/*.wav*
+# Personal data lives in the user data folder now (see Assets/Scripts/UserData.cs).
+# These are the old in-project locations; keep them out of git if an old copy reappears.
+/[Aa]ssets/[Ss]treamingAssets/config.json
+/[Aa]ssets/[Ss]treamingAssets/config.json.meta
+/[Aa]ssets/[Ss]treamingAssets/PlayerProfiles.db*
+/[Aa]ssets/[Ss]treamingAssets/DatabaseBackups*
+/[Aa]ssets/[Ss]treamingAssets/spriteTexturePackerGen.txt*

@@ -211,29 +211,37 @@ public class TwitchClient : MonoBehaviour
 
     }
 
+    private void ReplyFromConfig(string messageId, PlayerHandler ph, string configKey, string format)
+    {
+        string value = AppConfig.inst.GetS(configKey).Trim();
+        if (!string.IsNullOrEmpty(value))
+            ReplyToPlayer(messageId, ph.pp.TwitchUsername, string.Format(format, value));
+    }
+
     private void ProcessGlobalCommands(string messageId, PlayerHandler ph, string msg, int bits)
     {
         string commandKey = msg.ToLower();
 
+        //Info commands reply with your text and links from config; an empty value means no reply
         if(commandKey.StartsWith("!commands") || commandKey.StartsWith("!help"))
         {
-            ReplyToPlayer(messageId, ph.pp.TwitchUsername, $"More info and a list of all commands are located below on my stream page panels.");
+            ReplyFromConfig(messageId, ph, "HelpText", "{0}");
             return;
         }
 
         else if (commandKey.StartsWith("!wiki"))
         {
-            ReplyToPlayer(messageId, ph.pp.TwitchUsername, $"https://chaosleaguewiki.github.io");
+            ReplyFromConfig(messageId, ph, "WikiLink", "{0}");
             return;
         }
         else if (commandKey.StartsWith("!patreon"))
         {
-            ReplyToPlayer(messageId, ph.pp.TwitchUsername, $"https://www.patreon.com/doodlechaos");
+            ReplyFromConfig(messageId, ph, "PatreonLink", "{0}");
             return;
         }
         else if (commandKey.StartsWith("!discord"))
         {
-            ReplyToPlayer(messageId, ph.pp.TwitchUsername, $"Join the discord to chat with other players and share your thoughts on the game: https://discord.gg/tCjGjF68ds");
+            ReplyFromConfig(messageId, ph, "DiscordLink", "Join the Discord to chat with other players and share your thoughts on the game: {0}");
             return;
         }
 

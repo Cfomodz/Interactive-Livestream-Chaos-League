@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,9 +9,6 @@ using System.Linq;
 using System.Text;
 using Unity.VisualScripting;
 using UnityEngine;
-
-// Load Balancer        http://chaosbotlb-1365055632.us-east-2.elb.amazonaws.com/
-// LOCAL_PC_KEY         Bc2mMWjXCT2v83d3
 
 //                     0        1       2       3         4           5        6
 public enum UIMenu { Connect, Audio, Extras, GamePlay, Networking, Youtube, Advanced }
@@ -37,7 +35,10 @@ public class ConfigItem : INotifyPropertyChanged
     }
     
     public string UIDisplayText { get; set; }
-    
+
+    /// <summary>Your own details (channel, links, keys): always written to your config so they're easy to find and fill in.</summary>
+    public bool Personal { get; set; }
+
 
     public event PropertyChangedEventHandler PropertyChanged;
 
@@ -57,8 +58,27 @@ public class AppConfig
 
     public Dictionary<string, float> volumes;
 
+    /// <summary>Emote id -> index in the dynamic emote sprite sheet. Kept in its own file, saved with the sheet.</summary>
+    [JsonIgnore]
+    public Dictionary<string, int> downloadedEmoteIndexMap = new Dictionary<string, int>();
 
-    public Dictionary<string, int> downloadedEmoteIndexMap;
+    private const string SampleFileName = "config.sample.json";
+    private const string EmoteMapSeedFileName = "emote_index_map.json";
+
+    private static Dictionary<string, JToken> _defaultValues = new Dictionary<string, JToken>();
+    private static Dictionary<string, float> _defaultVolumes = new Dictionary<string, float>();
+    /// <summary>Values in your config for keys the sample doesn't have (kept so switching versions doesn't lose them).</summary>
+    private static Dictionary<string, object> _unknownValues = new Dictionary<string, object>();
+
+    /// <summary>A setting changed since your config was last saved.</summary>
+    public static bool IsDirty { get; private set; }
+    public static void MarkDirty() => IsDirty = true;
+
+    private class UserConfigFile
+    {
+        public Dictionary<string, object> values = new Dictionary<string, object>();
+        public Dictionary<string, float> volumes = new Dictionary<string, float>();
+    }
 
     public static QuipBattleGameQuestions QuipBattleQuestions = new QuipBattleGameQuestions(); 
 
@@ -84,58 +104,100 @@ public class AppConfig
             return LegendaryMult;
     }
 
-    public static void LoadFromJson(string json)
+    /// <summary>
+    /// Loads the defaults from StreamingAssets/config.sample.json, then your values from config.json
+    /// in the user data folder (see <see cref="UserData"/>). The first run creates that file with your
+    /// details left blank to fill in.
+    /// </summary>
+    public static void Load()
     {
-        inst = JsonConvert.DeserializeObject<AppConfig>(json);
-    }
+        string samplePath = Path.Combine(Application.streamingAssetsPath, SampleFileName);
+        inst = JsonConvert.DeserializeObject<AppConfig>(File.ReadAllText(samplePath));
+        inst.volumes ??= new Dictionary<string, float>();
+        _defaultValues = inst.configData.ToDictionary(kv => kv.Key, kv => ToToken(kv.Value.Value));
+        _defaultVolumes = new Dictionary<string, float>(inst.volumes);
+        _unknownValues.Clear();
 
-
-    public static void LoadEnvironmentVariables(string pathToEnv)
-    {
-        if (File.Exists(pathToEnv))
+        string userPath = UserData.ConfigPath;
+        if (File.Exists(userPath))
         {
-            string[] lines = File.ReadAllLines(pathToEnv);
-            foreach (string line in lines)
+            UserConfigFile user = JsonConvert.DeserializeObject<UserConfigFile>(File.ReadAllText(userPath)) ?? new UserConfigFile();
+            foreach (KeyValuePair<string, object> kv in user.values ?? new Dictionary<string, object>())
             {
-                if (line.Contains("="))
+                if (inst.configData.TryGetValue(kv.Key, out ConfigItem item))
+                    item.Value = kv.Value;
+                else
                 {
-                    string[] parts = line.Split('=');
-                    if (parts.Length == 2)
-                    {
-                        string key = parts[0].Trim();
-                        string value = parts[1].Trim();
-                        inst.SetV(key, value);
-                    }
+                    _unknownValues[kv.Key] = kv.Value;
+                    Debug.LogWarning($"Your config has '{kv.Key}', which this version doesn't use. Keeping it.");
                 }
             }
-            Debug.Log($"{lines.Length} Environment variables loaded.");
+            foreach (KeyValuePair<string, float> kv in user.volumes ?? new Dictionary<string, float>())
+                inst.volumes[kv.Key] = kv.Value;
+            Debug.Log($"Loaded your config from {userPath}");
         }
         else
         {
-            Debug.LogWarning(".env file not found.");
+            SaveUserConfig();
+            Debug.Log($"Created your config at {userPath}. Fill in your Twitch channel and other details there.");
         }
+
+        inst.downloadedEmoteIndexMap = LoadEmoteMap();
+
+        foreach (ConfigItem item in inst.configData.Values)
+            item.PropertyChanged += (sender, e) => MarkDirty();
+        IsDirty = false;
     }
 
-    public static void SaveConfigFile(string path)
+    /// <summary>
+    /// Writes your config: your personal details, plus every setting and volume that differs from the
+    /// sample's defaults. Defaults you haven't changed stay out, so new defaults reach you.
+    /// </summary>
+    public static void SaveUserConfig()
     {
-        Debug.Log("Saving app config"); 
-
         if (inst == null)
         {
-            Debug.LogError("Failed to save app config. inst == null");
+            Debug.LogError("Failed to save your config: it isn't loaded.");
             return;
         }
-        string json = JsonConvert.SerializeObject(inst, Formatting.Indented);
 
-        if (json == "null" || json == "")
+        UserConfigFile user = new UserConfigFile();
+        foreach (KeyValuePair<string, ConfigItem> kv in inst.configData.Where(kv => kv.Value.Personal))
+            user.values[kv.Key] = kv.Value.Value;
+        foreach (KeyValuePair<string, ConfigItem> kv in inst.configData.Where(kv => !kv.Value.Personal))
         {
-            Debug.LogError("Failed to save app config json. Json is null or empty"); 
-            return;
+            if (!_defaultValues.TryGetValue(kv.Key, out JToken defaultValue) || !JToken.DeepEquals(ToToken(kv.Value.Value), defaultValue))
+                user.values[kv.Key] = kv.Value.Value;
+        }
+        foreach (KeyValuePair<string, object> kv in _unknownValues)
+            user.values.TryAdd(kv.Key, kv.Value);
+        foreach (KeyValuePair<string, float> kv in inst.volumes)
+        {
+            if (!_defaultVolumes.TryGetValue(kv.Key, out float defaultVolume) || Math.Abs(defaultVolume - kv.Value) > 0.0001f)
+                user.volumes[kv.Key] = kv.Value;
         }
 
-        File.WriteAllText(path, json);
+        File.WriteAllText(UserData.ConfigPath, JsonConvert.SerializeObject(user, Formatting.Indented));
+        IsDirty = false;
+        Debug.Log($"Saved your config to {UserData.ConfigPath}");
+    }
 
-        Debug.Log("Saved config.json");
+    private static JToken ToToken(object value) => value == null ? JValue.CreateNull() : JToken.FromObject(value);
+
+    /// <summary>The emote cache map from the user data folder, or the seed shipped next to the seed sprite sheet.</summary>
+    private static Dictionary<string, int> LoadEmoteMap()
+    {
+        string path = File.Exists(UserData.EmoteMapPath) ? UserData.EmoteMapPath : Path.Combine(Application.streamingAssetsPath, EmoteMapSeedFileName);
+        if (!File.Exists(path))
+            return new Dictionary<string, int>();
+        return JsonConvert.DeserializeObject<Dictionary<string, int>>(File.ReadAllText(path)) ?? new Dictionary<string, int>();
+    }
+
+    public static void SaveEmoteMap()
+    {
+        if (inst == null)
+            return;
+        File.WriteAllText(UserData.EmoteMapPath, JsonConvert.SerializeObject(inst.downloadedEmoteIndexMap, Formatting.Indented));
     }
 
     public void SetV(string key, object value)
@@ -178,7 +240,7 @@ public class AppConfig
             return result;
         else
         {
-            Debug.LogError($"Failed to parse int from {key} value {value} from config values. Check the config.json file in streaming assets");
+            Debug.LogError($"Failed to parse int from {key} value {value} from config values. Check config.sample.json in StreamingAssets and your config.json in the user data folder");
             return -1;
         }
     }
@@ -193,7 +255,7 @@ public class AppConfig
             return result;
         else
         {
-            Debug.LogError($"Failed to parse float from {key} value {value} from config values. Check the config.json file in streaming assets");
+            Debug.LogError($"Failed to parse float from {key} value {value} from config values. Check config.sample.json in StreamingAssets and your config.json in the user data folder");
             return -1;
         }
     }
@@ -208,7 +270,7 @@ public class AppConfig
             return result;
         else
         {
-            Debug.LogError($"Failed to parse bool from {key} value {value} from config values. Check the config.json file in streaming assets");
+            Debug.LogError($"Failed to parse bool from {key} value {value} from config values. Check config.sample.json in StreamingAssets and your config.json in the user data folder");
             return false;
         }
     }
@@ -219,7 +281,7 @@ public class AppConfig
             return item.Value;
         else
         {
-            Debug.LogError($"Failed to retreive {key} from config values. Check the config.json file in streaming assets");
+            Debug.LogError($"Failed to retreive {key} from config values. Check config.sample.json in StreamingAssets and your config.json in the user data folder");
             return null;
         }
     }
