@@ -71,6 +71,11 @@ public class TwitchPubSub : MonoBehaviour
             _lavaBitTrigger.AddBits(twitchUsername, AppConfig.inst.GetI("ThroneLavaCost"));
         else if (rewardTitle.StartsWith("Activate Water"))
             _waterBitTrigger.AddBits(twitchUsername, AppConfig.inst.GetI("ThroneWaterCost"));
+        else if (TwitchApi.TryGetAutoJoinRewardRounds(rewardTitle, out int rounds))
+        {
+            ph.AddAutoJoinRounds(rounds);
+            _twitchClient.PingReplyPlayer(twitchUsername, $"You'll join the next {ph.pp.AutoJoinRounds:N0} rounds automatically.");
+        }
         else
             _ticketHandler.BidRedemption(ph, cost, BidType.ChannelPoints);
 

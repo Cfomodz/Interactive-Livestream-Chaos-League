@@ -208,6 +208,21 @@
       "Value": 10,
       "UIDisplayText": "Golden Tile Multiplier"
     },
+    "AutoJoinGoldPerRound": {
+      "Menu": 3,
+      "Value": 150,
+      "UIDisplayText": "Autojoin Gold Cost Per Round (!autojoin)"
+    },
+    "AutoJoinBidTickets": {
+      "Menu": 3,
+      "Value": 1,
+      "UIDisplayText": "Autojoin Bid Tickets (the bid autojoiners enter each round with)"
+    },
+    "ReplaceTileWithoutBiddersAfterS": {
+      "Menu": 3,
+      "Value": 120,
+      "UIDisplayText": "Replace Tile Without Enough Bidders After (s, 0 = never)"
+    },
     "NewKingBlockadeDuration": {
       "Menu": 3,
       "Value": 30,

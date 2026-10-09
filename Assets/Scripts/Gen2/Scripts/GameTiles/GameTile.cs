@@ -453,8 +453,17 @@ public class GameTile : MonoBehaviour
 
     public void FinishTile()
     {
+        CleanUpTile();
+
+        //Once the gameplay tile finishes, spin it to a new tile
+        _tc.SpinNewTile(this);
+    }
+
+    //Clean up the tile without spinning a new one, e.g. when a bidding tile is swapped out before it was played
+    public void CleanUpTile()
+    {
         //TileActive = false;
-        TileState = TileState.Inactive; 
+        TileState = TileState.Inactive;
         if (_game != null)
         {
             _game.CleanUpGame();
@@ -466,9 +475,6 @@ public class GameTile : MonoBehaviour
         Players.Clear();
         AlivePlayers.Clear();
         EliminatedPlayers.Clear();
-
-        //Once the gameplay tile finishes, spin it to a new tile
-        _tc.SpinNewTile(this);
     }
 
     public void SetTicketBonus(int count)

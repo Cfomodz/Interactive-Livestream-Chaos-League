@@ -409,7 +409,12 @@ public class TwitchClient : MonoBehaviour
 
         else if (commandKey.StartsWith("!cancelbid") || commandKey.StartsWith("!unbid"))
         {
-            _bidHandler.ClearFromQ(ph, updateQ:true); 
+            _bidHandler.ClearFromQ(ph, updateQ:true);
+        }
+
+        else if (commandKey.StartsWith("!autojoin"))
+        {
+            ProcessAutoJoinCommand(messageId, ph, msg);
         }
 
         else if (commandKey.StartsWith("!song"))
@@ -657,6 +662,31 @@ public class TwitchClient : MonoBehaviour
         ph.ThrowTomato(desiredTomatoAmount, targetPlayer); 
 
     }
+    //!autojoin <rounds> buys rounds that join on their own, at AutoJoinGoldPerRound gold each. Without a number it says how many are left.
+    private void ProcessAutoJoinCommand(string messageId, PlayerHandler ph, string msg)
+    {
+        int price = Math.Max(0, AppConfig.inst.GetI("AutoJoinGoldPerRound"));
+
+        string[] parts = msg.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length < 2 || !int.TryParse(parts[1], out int rounds) || rounds <= 0)
+        {
+            ReplyToPlayer(messageId, ph.pp.TwitchUsername, $"You have {ph.pp.AutoJoinRounds:N0} autojoin rounds left. !autojoin <rounds> joins that many rounds automatically for {price:N0} gold a round (you have {ph.pp.Gold:N0} gold).");
+            return;
+        }
+
+        long cost = (long)rounds * price;
+        if (cost > ph.pp.Gold)
+        {
+            long affordable = (price > 0) ? ph.pp.Gold / price : 0;
+            ReplyToPlayer(messageId, ph.pp.TwitchUsername, $"{rounds:N0} rounds cost {cost:N0} gold and you have {ph.pp.Gold:N0}, enough for {affordable:N0}.");
+            return;
+        }
+
+        ph.SubtractGold((int)cost, true);
+        ph.AddAutoJoinRounds(rounds);
+        ReplyToPlayer(messageId, ph.pp.TwitchUsername, $"You'll join the next {ph.pp.AutoJoinRounds:N0} rounds automatically. Paid {cost:N0} gold, {ph.pp.Gold:N0} left.");
+    }
+
     private IEnumerator ProcessStatsCommand(string messageId, PlayerHandler ph, string msg)
     {
         PlayerHandler phToLookup = ph;
@@ -678,7 +708,7 @@ public class TwitchClient : MonoBehaviour
         }
 
         PlayerProfile pp = phToLookup.pp; 
-        string statString = $"(@{phToLookup.pp.TwitchUsername}) [Gold: {pp.Gold:N0}] [Points: {pp.SessionScore:N0}] [Throne Captures: {pp.ThroneCaptures}] [Total Throne Time: {MyUtil.FormatDurationDHMS(pp.TimeOnThrone)}] [Players invited: {pp.GetInviteIds().Length}] [Tickets Spent: {pp.TotalTicketsSpent:N0}]";
+        string statString = $"(@{phToLookup.pp.TwitchUsername}) [Gold: {pp.Gold:N0}] [Points: {pp.SessionScore:N0}] [Throne Captures: {pp.ThroneCaptures}] [Total Throne Time: {MyUtil.FormatDurationDHMS(pp.TimeOnThrone)}] [Players invited: {pp.GetInviteIds().Length}] [Tickets Spent: {pp.TotalTicketsSpent:N0}]" + ((pp.AutoJoinRounds > 0) ? $" [Autojoin Rounds: {pp.AutoJoinRounds:N0}]" : "");
 
         ReplyToPlayer(messageId, ph.pp.TwitchUsername, statString);
 

@@ -74,6 +74,20 @@ public class DebugChatCommandsTests
     }
 
     [Test]
+    public void RedeemAutojoinUsesTheAutojoinRewards()
+    {
+        DebugChatCommands.Run(_chat, "/redeem alice autojoin50");
+        DebugChatCommands.Run(_chat, "/redeem alice autojoin7");
+
+        Assert.AreEqual(1, _events.Count, "Only the rewards that exist can be redeemed");
+        LiveChatChannelPointsRedemption autojoin = (LiveChatChannelPointsRedemption)_events[0];
+        Assert.AreEqual(TwitchApi.AutoJoinRewardTitle(50), autojoin.RewardTitle);
+        Assert.AreEqual(5_000, autojoin.Cost);
+        Assert.IsTrue(TwitchApi.TryGetAutoJoinRewardRounds(autojoin.RewardTitle, out int rounds));
+        Assert.AreEqual(50, rounds);
+    }
+
+    [Test]
     public void AViewersChatAndEventsAreTheSamePlayer()
     {
         DebugChatCommands.Run(_chat, "/as Alice hi");

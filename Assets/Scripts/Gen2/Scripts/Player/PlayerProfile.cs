@@ -44,7 +44,10 @@ public class PlayerProfile
     public int TotalTicketsSpent { get; set; }
 
     public int CurrentBid { get; set; }
-   
+
+    /// <summary>Rounds this player still joins on their own (!autojoin or an Autojoin reward). Kept between streams.</summary>
+    public int AutoJoinRounds { get; set; }
+
     
     public int LifeTimeScore { get; set; }
     public int Gold { get; set; }

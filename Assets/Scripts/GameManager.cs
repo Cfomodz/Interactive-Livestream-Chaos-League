@@ -52,11 +52,15 @@ public class GameManager : MonoBehaviour
 
     private StringBuilder _sb = new StringBuilder();
 
-    [HideInInspector] public Sprite CommunityPointSprite; 
+    [HideInInspector] public Sprite CommunityPointSprite;
+
+    /// <summary>When this run of the game started, to tell players active this session from ones loaded from earlier streams.</summary>
+    public DateTime SessionStartTime { get; private set; }
 
     void Awake()
     {
         Application.targetFrameRate = 60;
+        SessionStartTime = DateTime.Now;
 
         Debug.Log("Unity Main Thread: " + Thread.CurrentThread.ManagedThreadId);
 

@@ -109,7 +109,8 @@ public class TileController : MonoBehaviour
         foreach (GameTile tile in tilePossibilities)
             _tilePools.Add(tile.TileIDNum, new ObjectPool<GameTile>(() => {
                 GameTile newTile = Instantiate(tile.gameObject).GetComponent<GameTile>();
-                newTile.gameObject.name = "tile" + _tileCounter++;
+                //Keep the prefab name so logs say which tile it is (the on-tile name text was already set in Awake)
+                newTile.gameObject.name = $"tile{_tileCounter++} {tile.name}";
                 newTile.TileState = TileState.Inactive;
                 return newTile; 
             }, 
@@ -127,6 +128,27 @@ public class TileController : MonoBehaviour
         GameplayTile.PreInitTile(this, _forceGolden); 
         GameplayTile.InitTileInPos();
         StartCoroutine(GameplayTile.RunTile());
+
+        StartCoroutine(LogTileStatus());
+    }
+
+    //Once a minute, write where the tile progression is to the player log, so a stall can be diagnosed afterwards
+    private IEnumerator LogTileStatus()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(60);
+
+            string gameplay = (GameplayTile == null)
+                ? "none"
+                : $"{GameplayTile.name} ({GameplayTile.TileState}, players:{GameplayTile.Players.Count} alive:{GameplayTile.AlivePlayers.Count} belt:{GameplayTile.ConveyorBelt.Count})";
+            string bidding = (CurrentBiddingTile == null)
+                ? "none"
+                : $"{CurrentBiddingTile.name} ({CurrentBiddingTile.TileState}, bidders:{BidHandler.BiddingQCount} need:{CurrentBiddingTile.MinAuctionSlots})";
+            string next = (NextBiddingTile == null) ? "none" : NextBiddingTile.name;
+
+            Debug.Log($"[Tiles] gameplay: {gameplay} | bidding: {bidding} | next: {next}");
+        }
     }
 
     public void PoolTurnOnGT(GameTile tile)
@@ -196,7 +218,33 @@ public class TileController : MonoBehaviour
     }
 
 
-    //Can pass in null for the forceThisTileNext if you don't want to 
+    //Pick a tile to replace the bidding tile that can start with this many bidders. Null if there is none.
+    public GameTile PickReplacementBiddingTile(GameTile gt, int bidders)
+    {
+        List<GameTile> allTiles = AllRarities.Concat(CommonTiles).Concat(RareTiles).Concat(EpicTiles).Concat(LegendaryTiles).ToList();
+
+        List<int> blacklistedTiles = allTiles.Where(t => t.MinAuctionSlots > bidders).Select(t => t.TileIDNum).ToList();
+        blacklistedTiles.Add(gt.TileIDNum);
+        if (NextBiddingTile != null)
+            blacklistedTiles.Add(NextBiddingTile.TileIDNum);
+        if (GameplayTile != null)
+            blacklistedTiles.Add(GameplayTile.TileIDNum);
+
+        //GetRandomIDandRarity would loop forever if every tile is blacklisted
+        if (allTiles.All(t => blacklistedTiles.Contains(t.TileIDNum)))
+            return null;
+
+        return GetRandomTile(blacklistedTiles, gt.CurrentSide);
+    }
+
+    //Spin the bidding tile to the replacement in place. The bidding queue stays as it is.
+    public IEnumerator SpinInReplacementBiddingTile(GameTile gt, GameTile replacement)
+    {
+        gt.CleanUpTile();
+        yield return CSpinNewTile(gt, replacement);
+    }
+
+    //Can pass in null for the forceThisTileNext if you don't want to
     private IEnumerator CSpinNewTile(GameTile gt, GameTile nextTile)
     {
         _rebellionController.OnNewTileSpin(); 

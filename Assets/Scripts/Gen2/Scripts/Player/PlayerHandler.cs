@@ -268,6 +268,10 @@ public class PlayerHandler : MonoBehaviour, TravelingIndicatorIO, TI_Bid_IO
                 if (rc.DoesPlayerHaveActiveRebellion(this))
                     continue;
 
+                //If they're autojoining, keep them loaded so they keep joining between rounds
+                if (IsAutoJoining())
+                    continue;
+
                 var expireTime = LastAccess.AddSeconds(AppConfig.inst.GetF("destroyPlayerHandlerAfterSecInactivity"));
                 //If they have nothing on screen, and they haven't interacted with the game in __ seconds, destroy the player handler
                 if (DateTime.Now >= expireTime)
@@ -708,7 +712,56 @@ public class PlayerHandler : MonoBehaviour, TravelingIndicatorIO, TI_Bid_IO
     {
         await SQLiteServiceAsync.UpdatePlayer(pp);
 
-        FlaggedToUnload = true; 
+        FlaggedToUnload = true;
+    }
+
+    //Saves the profile right away instead of at unload or Save & Quit, for things that must survive the game closing
+    private async Task SaveNow()
+    {
+        try
+        {
+            await SQLiteServiceAsync.UpdatePlayer(pp);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Couldn't save {pp.TwitchUsername}'s profile: {e.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Has autojoin rounds left and has been active this session. Rounds kept from an earlier stream
+    /// resume once the player chats or redeems, not when someone else's !stats lookup loads them.
+    /// </summary>
+    public bool IsAutoJoining()
+    {
+        return pp != null && pp.AutoJoinRounds > 0 && pp.LastInteraction >= _gm.SessionStartTime;
+    }
+
+    /// <summary>Should go into the bidding queue on their own now: autojoining and not busy bidding, playing, ruling or on the podium.</summary>
+    public bool CanAutoJoinNow()
+    {
+        return !Initializing && !FlaggedToUnload && State == PlayerHandlerState.Idle && !pbh.gameObject.activeSelf && IsAutoJoining();
+    }
+
+    public void AddAutoJoinRounds(int rounds)
+    {
+        pp.AutoJoinRounds = (int)Math.Min(int.MaxValue, (long)pp.AutoJoinRounds + rounds);
+        Debug.Log($"[AutoJoin] {pp.TwitchUsername} got {rounds} rounds, {pp.AutoJoinRounds} left");
+        _ = SaveNow();
+    }
+
+    //A round counts only when the player actually gets into a tile, however they got there
+    private void UseAutoJoinRound()
+    {
+        if (pp.AutoJoinRounds <= 0)
+            return;
+
+        pp.AutoJoinRounds--;
+        Debug.Log($"[AutoJoin] {pp.TwitchUsername} joined a round, {pp.AutoJoinRounds} left");
+        _ = SaveNow();
+
+        if (pp.AutoJoinRounds == 0)
+            _gm.TwitchClient.PingReplyPlayer(pp.TwitchUsername, $"That was your last autojoin round. !autojoin <rounds> keeps you playing for {AppConfig.inst.GetI("AutoJoinGoldPerRound"):N0} gold a round.");
     }
 
     /// <summary>
@@ -770,6 +823,8 @@ public class PlayerHandler : MonoBehaviour, TravelingIndicatorIO, TI_Bid_IO
     /// </summary>
     public void CountRoundJoined()
     {
+        UseAutoJoinRound();
+
         string today = DateTime.Now.ToString("yyyy-MM-dd");
         if (pp.RoundsJoinedDate != today)
         {

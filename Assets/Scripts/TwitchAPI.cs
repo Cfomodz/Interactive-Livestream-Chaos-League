@@ -51,6 +51,24 @@ public class TwitchApi : MonoBehaviour
     public static int LavaRewardCost => AppConfig.inst.GetI("ThroneLavaCost") * 3; //3 times as expensive as bits
     public static int WaterRewardCost => AppConfig.inst.GetI("ThroneWaterCost") * 3;
 
+    /// <summary>The channel point rewards that buy autojoin rounds, cheaper per round the more you buy.</summary>
+    public static readonly (int Rounds, int Cost)[] AutoJoinRewards = { (20, 3_000), (50, 5_000), (100, 7_500) };
+    public static string AutoJoinRewardTitle(int rounds) => $"Autojoin {rounds} Rounds";
+
+    public static bool TryGetAutoJoinRewardRounds(string rewardTitle, out int rounds)
+    {
+        foreach ((int Rounds, int Cost) reward in AutoJoinRewards)
+        {
+            if (rewardTitle == AutoJoinRewardTitle(reward.Rounds))
+            {
+                rounds = reward.Rounds;
+                return true;
+            }
+        }
+        rounds = 0;
+        return false;
+    }
+
     /// <summary>OBS control (ObsEnabled in your config), or null when it's off.</summary>
     public static LiveChat.Obs.ObsController Obs { get; private set; }
     /// <summary>The broadcaster's OBS chat commands: !clscene, !clgolive, !clend, !clobs. Null when OBS control is off.</summary>
@@ -238,7 +256,8 @@ public class TwitchApi : MonoBehaviour
     {
         List<TwitchRewardSpec> rewards = new List<TwitchRewardSpec>();
 
-        int[] costs = new int[] { 1, 2, 5, 10, 25, 50, 100, 200, 500, 1000, 2500, 5000, 10_000, 20_000, 50_000, 100_000 };
+        //Bids stop below the lava and water rewards; the Autojoin rewards cover the bigger spends
+        int[] costs = new int[] { 1, 2, 5, 10, 25, 50, 100, 200, 500, 1000 };
         for (int i = 0; i < costs.Length; i++)
         {
             int cost = costs[i];
@@ -267,6 +286,17 @@ public class TwitchApi : MonoBehaviour
             Prompt = $"Mimicks adding {AppConfig.inst.GetI("ThroneWaterCost")} bit cheer to the !water trigger, for free!",
             BackgroundColor = MyUtil.ColorToHexString(_waterRewardBackgroundColor),
         });
+
+        foreach ((int rounds, int cost) in AutoJoinRewards)
+        {
+            rewards.Add(new TwitchRewardSpec
+            {
+                Title = AutoJoinRewardTitle(rounds),
+                Cost = cost,
+                Prompt = $"Join the next {rounds} rounds automatically, across streams. A round only counts when you get into a tile, and your own bids still raise your chances.",
+                BackgroundColor = MyUtil.ColorToHexString(_customRewardBackgroundColors.Evaluate(1)),
+            });
+        }
 
         try
         {

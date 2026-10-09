@@ -49,6 +49,8 @@ public class BidHandler : MonoBehaviour
 
     private ObjectPool<TI_Bid> _TI_BidPool;
 
+    public int BiddingQCount => _biddingQ.Count;
+
     [SerializeField] private int _commonBasePrize = 100;
     [SerializeField] private int _rareBasePrize = 200;
     [SerializeField] private int _epicBasePrize = 1_000;
@@ -79,10 +81,13 @@ public class BidHandler : MonoBehaviour
         _channelPointParticles.GetComponent<ParticleSystemRenderer>().material.mainTexture = _gm.CommunityPointSprite.texture; 
     }
 
-    public IEnumerator RunBiddingOn(GameTile gt) //GameTile tile
+    //replacingTile: gt was spun in on the same side to replace a bidding tile that didn't get enough bidders,
+    //so the queue doesn't rotate and the next tile on the other side is already known
+    public IEnumerator RunBiddingOn(GameTile gt, bool replacingTile = false) //GameTile tile
     {
         _tileController.CurrentBiddingTile = gt;
-        _tileController.NextBiddingTile = null;
+        if (!replacingTile)
+            _tileController.NextBiddingTile = null;
 
         _winnerPrizeText.ResetWinnerPrize(); 
         SetBasePrizeByRarity(gt.RarityType); 
@@ -97,6 +102,9 @@ public class BidHandler : MonoBehaviour
                 _auctionPositions[a].SetValid(false);
         }
 
+        //Players already in the queue move to the slots that are valid on this tile
+        UpdateBiddingQ();
+
         if (gt.IsShop)
             _winnerPrizeText.HideVisuals();
         else
@@ -104,7 +112,8 @@ public class BidHandler : MonoBehaviour
 
 
         //Rotate to the opposite side
-        yield return RotateToThisTile(gt);
+        if (!replacingTile)
+            yield return RotateToThisTile(gt);
         gt.TileState = TileState.Bidding;
 
         //Set the available number of Auction spots based on what the tile defines
@@ -239,25 +248,64 @@ public class BidHandler : MonoBehaviour
         _auctionTimerText.SetText("");
 
         //Wait for gameplay on other tile to finish
+        float autoJoinTimer = 0;
         while (_tileController.GameplayTile != null && _tileController.GameplayTile.TileState != TileState.Inactive)
+        {
+            autoJoinTimer += Time.deltaTime;
+            if (autoJoinTimer >= 1)
+            {
+                autoJoinTimer = 0;
+                EnterAutoJoiners();
+            }
             yield return null;
+        }
 
         int auctionTimeElapsed = 0;
+        int lastLoggedBidders = -1;
+        int secondsShortOfBidders = 0;
 
         //Wait to have enough players, and for countdown
         while (auctionTimeElapsed <= gt.AuctionDuration)
         {
             yield return new WaitForSeconds(1);
 
+            EnterAutoJoiners();
+
             //If we don't have enough players in the queue now due to !cancelbid or there just isn't enough, stop the timer
             if (_biddingQ.Count < gt.MinAuctionSlots)
             {
-                auctionTimeElapsed = 0; 
-                _auctionTimerText.SetText("");
+                if (_biddingQ.Count != lastLoggedBidders)
+                {
+                    Debug.Log($"[Tiles] {gt.name} is waiting for bidders before its auction can start: {_biddingQ.Count} of {gt.MinAuctionSlots}");
+                    lastLoggedBidders = _biddingQ.Count;
+                }
+                auctionTimeElapsed = 0;
+                _auctionTimerText.SetText($"Need {gt.MinAuctionSlots - _biddingQ.Count} more");
                 if (_countdownAudioSource.isPlaying)
-                    _countdownAudioSource.Stop(); 
-                continue; 
+                    _countdownAudioSource.Stop();
+
+                //Don't wait forever on a quiet stream: swap in a tile the current bidders can start
+                secondsShortOfBidders++;
+                int replaceAfterS = AppConfig.inst.GetI("ReplaceTileWithoutBiddersAfterS");
+                if (replaceAfterS > 0 && secondsShortOfBidders >= replaceAfterS)
+                {
+                    secondsShortOfBidders = 0;
+                    GameTile replacement = _tileController.PickReplacementBiddingTile(gt, _biddingQ.Count);
+                    if (replacement == null)
+                    {
+                        Debug.LogWarning($"[Tiles] No tile can start with {_biddingQ.Count} bidders, so {gt.name} keeps waiting");
+                        continue;
+                    }
+
+                    Debug.Log($"[Tiles] Replacing {gt.name} with {replacement.name}: only {_biddingQ.Count} of {gt.MinAuctionSlots} bidders after {replaceAfterS}s");
+                    _auctionTimerText.SetText("");
+                    yield return _tileController.SpinInReplacementBiddingTile(gt, replacement);
+                    StartCoroutine(RunBiddingOn(replacement, replacingTile: true));
+                    yield break;
+                }
+                continue;
             }
+            secondsShortOfBidders = 0;
 
             float t = auctionTimeElapsed / (float)gt.AuctionDuration;
             _auctionTimerText.SetText(MyUtil.GetMinuteSecString(gt.AuctionDuration - auctionTimeElapsed));
@@ -431,6 +479,20 @@ public class BidHandler : MonoBehaviour
     public void BidRedemption(PlayerHandler ph, int bidAmount, BidType bidType)
     {
         SpawnTI_Bid(ph, target:ph, bidAmount, bidType);
+    }
+
+    //Players with autojoin rounds left go into the queue on their own, with a small bid so anyone who bids this round still ranks above them
+    private void EnterAutoJoiners()
+    {
+        int bid = Mathf.Max(1, AppConfig.inst.GetI("AutoJoinBidTickets"));
+        foreach (PlayerHandler ph in _gm.PlayerHandlers.Values.ToList())
+        {
+            if (!ph.CanAutoJoinNow())
+                continue;
+
+            ph.IncrementBid(bid);
+            TryAddToBiddingQ(ph);
+        }
     }
 
     public void TryAddToBiddingQ(PlayerHandler ph)

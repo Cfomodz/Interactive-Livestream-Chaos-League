@@ -13,7 +13,7 @@ public static class DebugChatCommands
     {
         "/as <viewer> <message>: chat as another viewer (e.g. /as alice !invitedby @bob)",
         "/bits <viewer> <amount> [message]: cheer (e.g. /bits alice 300 !lava)",
-        "/redeem <viewer> <tickets|lava|water>: channel points (e.g. /redeem alice 100)",
+        "/redeem <viewer> <tickets|lava|water|autojoin20|autojoin50|autojoin100>: channel points (e.g. /redeem alice 100)",
         "/sub <viewer> [months]   /gift <gifter|anon> <viewer>   /giftbomb <gifter|anon> <count>",
         "/raid <channel> <viewers>   /follow <viewer>",
         "Chat without / is you, the streamer. Add cheer100 to any message to cheer.",
@@ -60,6 +60,13 @@ public static class DebugChatCommands
                     chat.SimulateRedemption(TwitchApi.LavaRewardTitle, Viewer(args[0]), null, TwitchApi.LavaRewardCost);
                 else if (reward == "water")
                     chat.SimulateRedemption(TwitchApi.WaterRewardTitle, Viewer(args[0]), null, TwitchApi.WaterRewardCost);
+                else if (reward.StartsWith("autojoin"))
+                {
+                    int rounds = int.Parse(reward.Substring("autojoin".Length));
+                    if (!TwitchApi.AutoJoinRewards.Any(r => r.Rounds == rounds))
+                        return false;
+                    chat.SimulateRedemption(TwitchApi.AutoJoinRewardTitle(rounds), Viewer(args[0]), null, TwitchApi.AutoJoinRewards.First(r => r.Rounds == rounds).Cost);
+                }
                 else
                 {
                     int tickets = int.Parse(reward);
